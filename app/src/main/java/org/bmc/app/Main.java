@@ -1,12 +1,12 @@
 package org.bmc.app;
 
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.bmc.app.dao.CustomerDAO;
 import org.bmc.app.model.Customer;
 import org.bmc.app.util.DBConnection;
-
-import java.util.List;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 /**
  * Main application entry point for Baltimore Metal Crafters DB App.
@@ -41,7 +41,7 @@ public class Main {
         try {
             boolean connected = DBConnection.testConnection();
             if (connected) {
-                LOGGER.info("Connected to: " + DBConnection.getDatabaseUrl());
+                LOGGER.info(() -> String.format("Connected to: %s", DBConnection.getDatabaseUrl()));
                 return true;
             } else {
                 LOGGER.warning("Database connection test failed");
@@ -64,26 +64,26 @@ public class Main {
         try {
             // Test: Find all customers
             List<Customer> allCustomers = customerDAO.findAll();
-            LOGGER.info("Found " + allCustomers.size() + " existing customers");
+            LOGGER.info(() -> String.format("Found %d existing customers", allCustomers.size()));
             
             // Display first few customers
             int count = 0;
             for (Customer customer : allCustomers) {
                 if (count++ < 3) {  // Show first 3 customers
-                    LOGGER.info("Customer: " + customer.getDisplayName());
+                    LOGGER.info(() -> String.format("Customer: %s", customer.getDisplayName()));
                 }
             }
             
             // Test: Search for a customer
             List<Customer> searchResults = customerDAO.searchByName("Baltimore");
-            LOGGER.info("Search for 'Baltimore' found " + searchResults.size() + " results");
+            LOGGER.info(() -> String.format("Search for 'Baltimore' found %d results", searchResults.size()));
             
             // Test: Find by ID (if we have customers)
             if (!allCustomers.isEmpty()) {
                 Customer firstCustomer = allCustomers.get(0);
                 Customer foundCustomer = customerDAO.findById(firstCustomer.getCustomerId());
                 if (foundCustomer != null) {
-                    LOGGER.info("Successfully retrieved customer by ID: " + foundCustomer.getDisplayName());
+                    LOGGER.info(() -> String.format("Successfully retrieved customer by ID: %s", foundCustomer.getDisplayName()));
                 }
             }
             
@@ -97,7 +97,7 @@ public class Main {
             
             Customer createdCustomer = customerDAO.create(testCustomer);
             if (createdCustomer != null) {
-                LOGGER.info("Created test customer with ID: " + createdCustomer.getCustomerId());
+                LOGGER.info(() -> String.format("Created test customer with ID: %d", createdCustomer.getCustomerId()));
                 
                 // Test: Update the customer
                 createdCustomer.setPhone("555-TEST-002");
@@ -108,7 +108,7 @@ public class Main {
                 
                 // Test: Check if we can delete (should be able to since it's new)
                 boolean canDelete = customerDAO.canDelete(createdCustomer.getCustomerId());
-                LOGGER.info("Can delete test customer: " + canDelete);
+                LOGGER.info(() -> String.format("Can delete test customer: %b", canDelete));
                 
                 // Clean up: Delete the test customer
                 boolean deleted = customerDAO.delete(createdCustomer.getCustomerId());

@@ -1,13 +1,17 @@
 package org.bmc.app.dao;
 
-import org.bmc.app.model.Customer;
-import org.bmc.app.util.DBConnection;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.bmc.app.model.Customer;
+import org.bmc.app.util.DBConnection;
 
 /**
  * Data Access Object for Customer entity.
@@ -71,7 +75,7 @@ public class CustomerDAO {
                 rs = pstmt.getGeneratedKeys();
                 if (rs.next()) {
                     customer.setCustomerId(rs.getInt(1));
-                    LOGGER.info("Created customer with ID: " + customer.getCustomerId());
+                    LOGGER.info(() -> String.format("Created customer with ID: %d", customer.getCustomerId()));
                     return customer;
                 }
             }
@@ -141,7 +145,7 @@ public class CustomerDAO {
                 customers.add(mapResultSetToCustomer(rs));
             }
             
-            LOGGER.info("Retrieved " + customers.size() + " customers");
+            LOGGER.info(() -> String.format("Retrieved %d customers", customers.size()));
             
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error retrieving all customers", e);
@@ -180,7 +184,7 @@ public class CustomerDAO {
             int rowsAffected = pstmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.info("Updated customer ID: " + customer.getCustomerId());
+                LOGGER.info(() -> String.format("Updated customer ID: %d", customer.getCustomerId()));
                 return true;
             }
             
@@ -216,7 +220,7 @@ public class CustomerDAO {
             int rowsAffected = pstmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.info("Deleted customer ID: " + customerId);
+                LOGGER.info(() -> String.format("Deleted customer ID: %d", customerId));
                 return true;
             }
             
@@ -257,7 +261,7 @@ public class CustomerDAO {
                 customers.add(mapResultSetToCustomer(rs));
             }
             
-            LOGGER.info("Found " + customers.size() + " customers matching: " + namePattern);
+            LOGGER.info(() -> String.format("Found %d customers matching: %s", customers.size(), namePattern));
             
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error searching customers by name", e);

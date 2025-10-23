@@ -1,4 +1,12 @@
-org\bmc\app\util\DBConnection.class
 org\bmc\app\Main.class
+org\bmc\app\model\Employee.class
+org\bmc\app\model\Job.class
 org\bmc\app\model\Customer.class
+org\bmc\app\dao\EmployeeDAO.class
+org\bmc\app\dao\JobDAO.class
+org\bmc\app\dao\InvoiceDAO.class
+org\bmc\app\util\DBConnection.class
+org\bmc\app\model\Job$Status.class
 org\bmc\app\dao\CustomerDAO.class
+org\bmc\app\model\Employee$Role.class
+org\bmc\app\model\Invoice.class
