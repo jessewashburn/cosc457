@@ -10,3 +10,4 @@ org\bmc\app\model\Job$Status.class
 org\bmc\app\dao\CustomerDAO.class
 org\bmc\app\model\Employee$Role.class
 org\bmc\app\model\Invoice.class
+org\bmc\app\test\SimpleModelTest.class
