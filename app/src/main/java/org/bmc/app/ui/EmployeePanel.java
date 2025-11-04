@@ -1,13 +1,25 @@
 package org.bmc.app.ui;
 
-import org.bmc.app.dao.EmployeeDAO;
-import org.bmc.app.model.Employee;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.util.List;
 import java.util.logging.Logger;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableModel;
+
+import org.bmc.app.dao.EmployeeDAO;
+import org.bmc.app.model.Employee;
 
 /**
  * Panel for managing employee data with table view and basic operations.
@@ -104,9 +116,6 @@ public class EmployeePanel extends JPanel {
         employeeTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Role
         employeeTable.getColumnModel().getColumn(3).setPreferredWidth(150); // Specialization
         employeeTable.getColumnModel().getColumn(4).setPreferredWidth(200); // Contact Info
-        employeeTable.getColumnModel().getColumn(4).setPreferredWidth(180); // Email
-        employeeTable.getColumnModel().getColumn(5).setPreferredWidth(120); // Phone
-        employeeTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Hire Date
     }
     
     private JPanel createInfoPanel() {

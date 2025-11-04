@@ -1,13 +1,25 @@
 package org.bmc.app.ui;
 
-import org.bmc.app.dao.InvoiceDAO;
-import org.bmc.app.model.Invoice;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.util.List;
 import java.util.logging.Logger;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableModel;
+
+import org.bmc.app.dao.InvoiceDAO;
+import org.bmc.app.model.Invoice;
 
 /**
  * Panel for managing invoice data with table view and payment status filtering.
@@ -118,9 +130,6 @@ public class InvoicePanel extends JPanel {
         invoiceTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Amount
         invoiceTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Invoice Date
         invoiceTable.getColumnModel().getColumn(4).setPreferredWidth(120); // Payment Status
-        invoiceTable.getColumnModel().getColumn(4).setPreferredWidth(100); // Due Date
-        invoiceTable.getColumnModel().getColumn(5).setPreferredWidth(100); // Payment Status
-        invoiceTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Payment Date
     }
     
     private JPanel createInfoPanel() {

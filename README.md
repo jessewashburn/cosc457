@@ -1,262 +1,218 @@
-# Baltimore Metal Crafters DB App
+# Baltimore Metal Crafters Database Management System
 
-A comprehensive Java application backed by MySQL that manages customers, employees, jobs, and invoices for a custom metal restoration shop. This application provides a complete business management solution with robust data validation, business logic, and reporting capabilities.
+A comprehensive Java Swing application for managing restoration projects, customer relationships, employee records, and billing for Baltimore Metal Crafters.
 
-## Features Implemented
+## Project Overview
+
+This application provides a complete database management system for a metal restoration business, featuring customer management, employee tracking, job monitoring, and invoice processing with a professional Swing-based user interface.
+
+## Technology Stack
+
+- **Java 21**: Modern Java with latest language features
+- **MySQL 8.x**: Robust database server for data persistence  
+- **Maven 3.9+**: Dependency management and build automation
+- **JDBC**: Direct database connectivity with prepared statements
+- **Swing**: Native Java GUI framework for desktop application
+
+## Features
 
 ### Core Business Entities
-* **Customer Management** - Complete CRUD operations with validation and search capabilities
-* **Employee Management** - Role-based system (Restorer, Fabricator, Admin) with craftsperson filtering
-* **Job Management** - Status workflow (Planned → In Progress → Completed) with overdue tracking
-* **Invoice Management** - Payment tracking with aging categories and business reporting
-
-### Advanced Business Logic
-* **Data Validation** - Comprehensive validation across all entity models
-* **Status Management** - Enum-based status tracking with business rule enforcement
-* **Aging Reports** - Invoice aging categories (Current, 31-60 days, 61+ days, Paid)
-* **Date Calculations** - Overdue detection, days until due, invoice aging
-* **Role-Based Logic** - Craftsperson vs administrative employee filtering
+- **Customer Management**: Complete client information and contact tracking
+- **Employee Management**: Staff records with role-based organization
+- **Job Tracking**: Restoration project monitoring with status workflow
+- **Invoice Management**: Billing and payment tracking with overdue detection
 
 ### Database Layer
-* **Complete Schema** - 15 tables with proper relationships and constraints
-* **Sample Data** - Comprehensive seed data for testing and demonstration
-* **Business Queries** - 8 predefined reports for common business operations
-* **Full CRUD DAOs** - Complete data access layer with prepared statements
+- **17-table normalized schema** with proper relationships and constraints
+- **Complete CRUD operations** through Data Access Objects (DAOs)
+- **Business logic validation** and status management
+- **Comprehensive sample data** for testing and demonstration
 
-## Tech Stack
-
-* **Java 21** - Modern Java with latest language features
-* **Maven 3.9+** - Build system with dependency management
-* **MySQL 8.x** - Database with utf8mb4 character set
-* **JDBC** - Database connectivity with connection pooling
-* **JUnit 5** - Testing framework (ready for unit tests)
-* **Java Logging** - Production-ready logging with lambda suppliers
+### User Interface
+- **Tabbed interface** for intuitive navigation between entity types
+- **Table-based data display** with sorting and filtering capabilities
+- **Search functionality** for efficient data retrieval
+- **Professional menu system** with standard application features
 
 ## Project Structure
 
 ```
 cosc457/
-├── README.md                              # Project documentation
-├── PROJECT_STRUCTURE.md                   # Detailed structure guide
-├── .gitignore                            # Git ignore rules (Java, Maven, IDE files)
-├── db/                                   # Database files
-│   ├── schema.sql                        # Complete database schema (15 tables)
-│   ├── data.sql                         # Sample seed data for testing
-│   └── queries.sql                      # Business reporting queries (8 reports)
-├── docs/                                # Documentation
-│   └── screenshots/                     # UI screenshots (for future development)
-└── app/                                 # Java application
-    ├── pom.xml                          # Maven build configuration
-    ├── src/main/
-    │   ├── resources/
-    │   │   └── application.properties    # Database configuration
-    │   └── java/org/bmc/app/
-    │       ├── Main.java                 # Application entry point
-    │       ├── model/                    # Entity Models (4 classes)
-    │       │   ├── Customer.java         # Customer entity with validation
-    │       │   ├── Employee.java         # Employee with role management
-    │       │   ├── Job.java             # Job with status workflow
-    │       │   └── Invoice.java         # Invoice with aging logic
-    │       ├── dao/                      # Data Access Objects (4 classes)
-    │       │   ├── CustomerDAO.java      # Customer CRUD + search operations
-    │       │   ├── EmployeeDAO.java      # Employee CRUD + workload queries
-    │       │   ├── JobDAO.java          # Job CRUD + scheduling logic
-    │       │   └── InvoiceDAO.java      # Invoice CRUD + aging reports
-    │       ├── util/                     # Utilities (1 class)
-    │       │   └── DBConnection.java     # Database connection management
-    │       ├── ui/                       # UI components (ready for Swing development)
-    │       └── test/                     # Integration Tests (1 class)
-    │           └── SimpleModelTest.java  # Complete model interaction testing
-    └── target/                          # Maven build output (auto-generated)
+├── app/                          # Main Maven application
+│   ├── src/main/java/org/bmc/app/
+│   │   ├── dao/                  # Data Access Objects
+│   │   │   ├── CustomerDAO.java
+│   │   │   ├── EmployeeDAO.java
+│   │   │   ├── JobDAO.java
+│   │   │   └── InvoiceDAO.java
+│   │   ├── model/                # Entity classes
+│   │   │   ├── Customer.java
+│   │   │   ├── Employee.java
+│   │   │   ├── Job.java
+│   │   │   └── Invoice.java
+│   │   ├── ui/                   # User interface components
+│   │   │   ├── MainFrame.java
+│   │   │   ├── CustomerPanel.java
+│   │   │   ├── EmployeePanel.java
+│   │   │   ├── JobPanel.java
+│   │   │   └── InvoicePanel.java
+│   │   ├── util/                 # Database utilities
+│   │   │   └── DBConnection.java
+│   │   ├── test/                 # Test classes
+│   │   │   └── FullDAOIntegrationTest.java
+│   │   ├── Main.java             # Console application entry point
+│   │   └── MainGUI.java          # GUI application entry point
+│   ├── src/main/resources/       # Configuration files
+│   │   └── db.properties         # Database connection settings
+│   ├── pom.xml                   # Maven configuration
+│   └── target/                   # Compiled classes and dependencies
+├── db/                           # Database files
+│   ├── schema.sql                # Complete database structure
+│   ├── data.sql                  # Sample data for testing
+│   └── queries.sql               # Business reporting queries
+├── docs/                         # Team documentation
+│   ├── CHRIS_FRONTEND_GUIDE.md   # Frontend development guide
+│   └── BRYAN_TESTING_GUIDE.md    # Testing and QA guide
+└── README.md                     # This file
 ```
-
-### Implementation Status
-- **Database Schema**: 15 tables with relationships and constraints
-- **Entity Models**: 4 complete model classes with business logic
-- **Data Access**: 4 complete DAO classes with full CRUD operations
-- **Testing**: Integration test demonstrating all functionality
-- **Configuration**: Maven build system and database connectivity
-- **UI Layer**: Ready for Swing component development
 
 ## Quick Start
 
 ### Prerequisites
 
-* **Java 21** - Required for modern language features
-* **Maven 3.9+** - Build and dependency management
-* **MySQL 8.x** - Database server (optional for model testing)
+- Java 21 or higher
+- Maven 3.9 or higher  
+- MySQL 8.0 or higher
 
-### Option 1: Run Model Tests (No Database Required)
+### Database Setup
 
-Test the complete business logic and model interactions without database setup:
+1. **Create Database and User**:
+```sql
+CREATE DATABASE bmc_db;
+CREATE USER 'bmc_user'@'localhost' IDENTIFIED BY 'bmc_password123';
+GRANT ALL PRIVILEGES ON bmc_db.* TO 'bmc_user'@'localhost';
+FLUSH PRIVILEGES;
+```
 
+2. **Load Schema and Sample Data**:
 ```bash
-# Navigate to project directory
-cd app
-
-# Compile the project
-mvn clean compile
-
-# Run the integration test
-java -cp target/classes org.bmc.app.test.SimpleModelTest
+mysql -u bmc_user -p bmc_db < db/schema.sql
+mysql -u bmc_user -p bmc_db < db/data.sql
 ```
 
-**Expected Output**: Complete demonstration of model interactions, business logic, validation, and entity relationships.
+### Application Execution
 
-### Option 2: Full Database Setup
-
-For complete functionality with database connectivity:
-
-#### 1) Create Database
-```bash
-mysql -u root -p -e "CREATE DATABASE bmc_db CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
-mysql -u root -p bmc_db < db/schema.sql
-mysql -u root -p bmc_db < db/data.sql
-```
-
-#### 2) Configure Database Connection
-Update `app/src/main/resources/application.properties`:
-
-```properties
-db.url=jdbc:mysql://localhost:3306/bmc_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-db.user=root
-db.password=your_password
-db.driver=com.mysql.cj.jdbc.Driver
-```
-
-#### 3) Build and Run
 ```bash
 cd app
-mvn clean compile
-mvn exec:java -Dexec.mainClass="org.bmc.app.Main"
-```
-
-Or build executable JAR:
-```bash
-mvn clean package
-java -jar target/bmc-app-1.0.0-shaded.jar
+mvn compile exec:java
 ```
 
 ## Database Schema
 
-The application includes a comprehensive 15-table database schema (in `db/schema.sql`):
+The application uses a comprehensive 17-table database structure:
 
-### Core Business Tables:
-* **Customer** - Customer information with contact details
-* **Employee** - Staff with role-based permissions (restorer, fabricator, admin)
-* **Job** - Work orders with status tracking and due dates
-* **Invoice** - Billing with payment status and aging categories
+### Core Tables
+- `customers`: Client company information and contacts
+- `employees`: Staff records with roles and contact details  
+- `jobs`: Restoration projects with status tracking
+- `invoices`: Billing records with payment status
 
-### Supporting Tables:
-* **Quote**, **Quote_Item** - Estimate system
-* **Work_Log** - Time tracking for jobs
-* **Service**, **Material**, **Job_Material** - Service and inventory management
-* **Vendor**, **Purchase_Order**, **PO_Item** - Procurement system
-* **Payment** - Payment history tracking
+### Supporting Tables
+- `job_materials`: Materials used per job
+- `job_employees`: Employee assignments to jobs
+- `invoice_items`: Detailed line items for invoices
+- `customer_contacts`: Additional customer contact persons
+- Status and reference tables for data integrity
 
-## Sample Business Queries
+## Business Logic
 
-The `db/queries.sql` file includes 8 business intelligence queries:
+### Job Status Workflow
+- **Pending**: Initial assessment and planning
+- **InProgress**: Active restoration work
+- **Completed**: Work finished, ready for delivery
+- **OnHold**: Temporarily suspended
+- **Cancelled**: Project terminated
 
-```sql
--- 1. Jobs Due Soon (Next 7 Days)
-SELECT j.job_id, c.name AS customer, j.due_date, j.status
-FROM Job j JOIN Customer c ON c.customer_id = j.customer_id
-WHERE j.status IN ('Planned','InProgress')
-  AND j.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY);
+### Employee Roles
+- **Manager**: Project oversight and client relations
+- **Restorer**: Hands-on restoration and conservation work
+- **Fabricator**: Metal fabrication and structural repair
+- **Consultant**: Technical expertise and assessment
 
--- 2. Invoice Aging Report
-SELECT c.name, i.total_amount, 
-  DATEDIFF(CURDATE(), i.invoice_date) AS days_old,
-  CASE WHEN DATEDIFF(CURDATE(), i.invoice_date) <= 30 THEN 'Current'
-       WHEN DATEDIFF(CURDATE(), i.invoice_date) <= 60 THEN '31-60 days'
-       ELSE '61+ days' END as aging_category
-FROM Invoice i JOIN Job j ON i.job_id = j.job_id 
-JOIN Customer c ON j.customer_id = c.customer_id
-WHERE i.paid = FALSE;
+## Data Access Layer
 
--- 3. Employee Workload Analysis
-SELECT e.name, e.role, COUNT(w.log_id) as total_logs,
-  SUM(w.hours_worked) as total_hours
-FROM Employee e LEFT JOIN Work_Log w ON e.employee_id = w.employee_id
-GROUP BY e.employee_id ORDER BY total_hours DESC;
+### DAO Implementation
+Each entity has a corresponding DAO class providing:
+- Complete CRUD operations (Create, Read, Update, Delete)
+- Specialized query methods for business requirements
+- Prepared statements for SQL injection prevention
+- Proper resource management and error handling
+
+### Example Usage
+```java
+// Customer operations
+CustomerDAO customerDAO = new CustomerDAO();
+List<Customer> allCustomers = customerDAO.findAll();
+List<Customer> searchResults = customerDAO.searchByName("Baltimore");
+Customer newCustomer = customerDAO.create(customer);
+
+// Job status filtering
+JobDAO jobDAO = new JobDAO();
+List<Job> inProgressJobs = jobDAO.findByStatus(JobStatus.InProgress);
+List<Job> customerJobs = jobDAO.findByCustomer(customerId);
 ```
 
-## Key Features Demonstrated
+## Testing
 
-### Model Layer (`app/src/main/java/org/bmc/app/model/`)
-- **Data Validation**: All entities include comprehensive validation logic
-- **Business Logic**: Status workflows, aging calculations, role-based filtering
-- **Date Handling**: Overdue detection, aging categories, duration calculations
-- **Display Methods**: Formatted output for UI presentation
+### Integration Testing
+Comprehensive DAO integration tests verify:
+- Database connectivity and configuration
+- CRUD operations for all entities
+- Cross-DAO relationship queries
+- Data consistency and transaction handling
 
-### Data Access Layer (`app/src/main/java/org/bmc/app/dao/`)
-- **Full CRUD Operations**: Create, Read, Update, Delete for all entities
-- **Business Queries**: Search, filtering, and reporting methods
-- **Prepared Statements**: SQL injection prevention
-- **Connection Management**: Proper resource handling and cleanup
+### Sample Data
+The application includes realistic test data:
+- 6 customers (museums, historical societies, private collectors)
+- 6 employees across different roles
+- 5 jobs in various stages of completion
+- 3 invoices with different payment statuses
 
-### Integration Testing (`app/src/main/java/org/bmc/app/test/`)
-- **Model Validation**: Tests all validation rules and edge cases
-- **Business Logic**: Demonstrates status workflows and calculations
-- **Entity Relationships**: Shows how models interact and reference each other
-- **Error Handling**: Validates proper error states and recovery
+## Configuration
 
-## Development Notes
-
-### Code Quality Features:
-- **Java 21 Compatibility** - Modern switch expressions, pattern matching ready
-- **Efficient Logging** - Lambda suppliers for performance
-- **Clean Code** - No lint warnings or code quality issues
-- **Maven Integration** - Proper dependency management and build lifecycle
-- **Git Ready** - Comprehensive .gitignore for Java projects
-
-### Ready for Extension:
-- **Swing UI Layer** - Package structure ready for GUI components
-- **Additional Entities** - Quote, Material, Vendor models can be added
-- **Advanced Reports** - Framework ready for complex business analytics
-- **Unit Testing** - JUnit 5 configured for comprehensive test coverage
-
-## Running the Integration Test
-
-The `SimpleModelTest.java` demonstrates all implemented functionality:
-
-```bash
-cd app
-mvn clean compile
-java -cp target/classes org.bmc.app.test.SimpleModelTest
+Database connection settings in `src/main/resources/db.properties`:
+```properties
+db.url=jdbc:mysql://localhost:3306/bmc_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+db.username=bmc_user
+db.password=bmc_password123
+db.driver=com.mysql.cj.jdbc.Driver
 ```
 
-### Test Output Includes:
-1. **Model Creation & Validation** - Customer, Employee, Job, Invoice objects
-2. **Business Logic Testing** - Role validation, status workflows, date calculations
-3. **Entity Relationships** - Cross-model interactions and data consistency
-4. **Real Business Scenarios** - Overdue jobs, invoice aging, employee assignments
+## Development Team
 
-### Sample Test Output:
-```
-=== Simple Model Test - Baltimore Metal Crafters ===
---- Testing Customer Model ---
-Created customer: Baltimore Ironworks (410-555-1234)
-Customer is valid: true
---- Testing Employee Model ---
-Restorer: John Smith (restorer) - 410-555-0001, Is Craftsperson: true
-Fabricator: Mary Johnson (fabricator) - 410-555-0002, Is Craftsperson: true
-Admin: Bob Wilson (admin) - 410-555-0003, Is Craftsperson: false
---- Testing Job Model ---
-Job: Restore Victorian iron fence gates
-Status: Planned
-Is Active: true
-Days until due: 10
-Status updated to: In Progress
-Final status: Completed
---- Testing Invoice Model ---
-Invoice: New Invoice ($2500.00)
-Days since invoice: 15
-Aging category: Current (0-30 days)
---- Testing Model Interactions ---
-ALERT: Job is 5 days overdue with unpaid invoice (20 days old)
-=== Simple Model Test Completed Successfully ===
-```
+This project was developed collaboratively with specialized roles:
 
-This test proves that all business logic, validation, and entity relationships are working correctly!
+- **Backend Development**: Database schema, DAO implementation, business logic
+- **Frontend Development**: Swing UI components, dialog forms, user interaction
+- **Quality Assurance**: Testing, data validation, user experience evaluation
+
+## Code Quality Features
+
+- **Modern Java 21**: Switch expressions, text blocks, enhanced type inference
+- **Comprehensive Logging**: Structured logging with java.util.logging
+- **Resource Management**: Proper try-with-resources usage
+- **SQL Security**: Prepared statements throughout
+- **Error Handling**: Graceful exception handling and user feedback
+
+## Future Enhancements
+
+- [ ] Advanced reporting and analytics dashboard
+- [ ] Photo documentation integration for restoration projects  
+- [ ] Inventory management for materials and tools
+- [ ] Time tracking for employee productivity
+- [ ] Automated invoice generation and email delivery
+- [ ] Web-based interface for remote access
+
+## License
+
+This project is developed for educational purposes as part of COSC 457 - Database Management Systems.
