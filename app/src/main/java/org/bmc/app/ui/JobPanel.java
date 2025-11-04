@@ -2,7 +2,6 @@ package org.bmc.app.ui;
 
 import org.bmc.app.dao.JobDAO;
 import org.bmc.app.model.Job;
-import org.bmc.app.model.JobStatus;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -155,7 +154,7 @@ public class JobPanel extends JPanel {
                 job.getStatus().toString(),
                 job.getStartDate(),
                 job.getDueDate(),
-                String.format("$%.2f", job.getEstimatedCost())
+                String.format("$%.2f", job.getEstimatedValue())
             };
             tableModel.addRow(row);
         }
@@ -170,10 +169,15 @@ public class JobPanel extends JPanel {
         }
         
         try {
-            JobStatus status = JobStatus.valueOf(selectedStatus);
-            List<Job> results = jobDAO.findByStatus(status);
-            populateTable(results);
-            logger.info("Filter by status '" + selectedStatus + "' returned " + results.size() + " results");
+            Job.Status status = Job.Status.fromString(selectedStatus);
+            if (status != null) {
+                List<Job> results = jobDAO.findByStatus(status);
+                populateTable(results);
+                logger.info("Filter by status '" + selectedStatus + "' returned " + results.size() + " results");
+            } else {
+                logger.warning("Invalid status selected: " + selectedStatus);
+                loadJobData(); // Fallback to showing all
+            }
         } catch (Exception e) {
             logger.severe("Error filtering jobs by status: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
@@ -192,7 +196,7 @@ public class JobPanel extends JPanel {
         }
         
         try {
-            Long customerId = Long.parseLong(customerIdText);
+            Integer customerId = Integer.parseInt(customerIdText);
             List<Job> results = jobDAO.findByCustomer(customerId);
             populateTable(results);
             logger.info("Filter by customer ID " + customerId + " returned " + results.size() + " results");
@@ -223,7 +227,7 @@ public class JobPanel extends JPanel {
         if (selectedRow == -1) return;
         
         // TODO: Implement edit job dialog
-        Long jobId = (Long) tableModel.getValueAt(selectedRow, 0);
+        Integer jobId = (Integer) tableModel.getValueAt(selectedRow, 0);
         JOptionPane.showMessageDialog(this,
             "Edit Job dialog for ID " + jobId + " will be implemented in the next phase.",
             "Feature Coming Soon",
@@ -234,7 +238,7 @@ public class JobPanel extends JPanel {
         int selectedRow = jobTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        Long jobId = (Long) tableModel.getValueAt(selectedRow, 0);
+        Integer jobId = (Integer) tableModel.getValueAt(selectedRow, 0);
         String description = (String) tableModel.getValueAt(selectedRow, 2);
         
         int choice = JOptionPane.showConfirmDialog(this,

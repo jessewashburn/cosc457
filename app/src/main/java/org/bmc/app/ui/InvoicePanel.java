@@ -6,7 +6,6 @@ import org.bmc.app.model.Invoice;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -20,7 +19,6 @@ public class InvoicePanel extends JPanel {
     private JTable invoiceTable;
     private DefaultTableModel tableModel;
     private JComboBox<String> paymentStatusFilter;
-    private JCheckBox overdueOnlyFilter;
     private JButton addButton, editButton, deleteButton, refreshButton, markPaidButton;
     
     public InvoicePanel() {
@@ -57,11 +55,6 @@ public class InvoicePanel extends JPanel {
         paymentStatusFilter.addActionListener(e -> filterByPaymentStatus());
         toolbar.add(paymentStatusFilter);
         
-        // Overdue filter
-        overdueOnlyFilter = new JCheckBox("Overdue Only");
-        overdueOnlyFilter.addActionListener(e -> filterOverdue());
-        toolbar.add(overdueOnlyFilter);
-        
         toolbar.add(new JSeparator(SwingConstants.VERTICAL));
         
         // CRUD buttons
@@ -92,7 +85,7 @@ public class InvoicePanel extends JPanel {
     }
     
     private void createTable() {
-        String[] columnNames = {"Invoice ID", "Job ID", "Amount", "Date Issued", "Due Date", "Payment Status", "Payment Date"};
+        String[] columnNames = {"Invoice ID", "Job ID", "Amount", "Invoice Date", "Payment Status"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -111,7 +104,7 @@ public class InvoicePanel extends JPanel {
                 // Enable "Mark Paid" only for unpaid invoices
                 if (hasSelection) {
                     int selectedRow = invoiceTable.getSelectedRow();
-                    String paymentStatus = (String) tableModel.getValueAt(selectedRow, 5);
+                    String paymentStatus = (String) tableModel.getValueAt(selectedRow, 4);
                     markPaidButton.setEnabled("Unpaid".equals(paymentStatus));
                 } else {
                     markPaidButton.setEnabled(false);
@@ -123,7 +116,8 @@ public class InvoicePanel extends JPanel {
         invoiceTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Invoice ID
         invoiceTable.getColumnModel().getColumn(1).setPreferredWidth(70);  // Job ID
         invoiceTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Amount
-        invoiceTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Date Issued
+        invoiceTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Invoice Date
+        invoiceTable.getColumnModel().getColumn(4).setPreferredWidth(120); // Payment Status
         invoiceTable.getColumnModel().getColumn(4).setPreferredWidth(100); // Due Date
         invoiceTable.getColumnModel().getColumn(5).setPreferredWidth(100); // Payment Status
         invoiceTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Payment Date
@@ -160,11 +154,9 @@ public class InvoicePanel extends JPanel {
             Object[] row = {
                 invoice.getInvoiceId(),
                 invoice.getJobId(),
-                String.format("$%.2f", invoice.getAmount()),
-                invoice.getDateIssued(),
-                invoice.getDueDate(),
-                invoice.isPaid() ? "Paid" : "Unpaid",
-                invoice.getPaymentDate() != null ? invoice.getPaymentDate().toString() : ""
+                String.format("$%.2f", invoice.getTotalAmount()),
+                invoice.getInvoiceDate(),
+                invoice.getPaid() ? "Paid" : "Unpaid"
             };
             tableModel.addRow(row);
         }
@@ -174,11 +166,7 @@ public class InvoicePanel extends JPanel {
         String selectedStatus = (String) paymentStatusFilter.getSelectedItem();
         
         if ("All".equals(selectedStatus)) {
-            if (!overdueOnlyFilter.isSelected()) {
-                loadInvoiceData();
-            } else {
-                filterOverdue();
-            }
+            loadInvoiceData();
             return;
         }
         
@@ -186,39 +174,12 @@ public class InvoicePanel extends JPanel {
             boolean isPaid = "Paid".equals(selectedStatus);
             List<Invoice> results = invoiceDAO.findByPaymentStatus(isPaid);
             
-            // If overdue filter is also active, further filter the results
-            if (overdueOnlyFilter.isSelected() && !isPaid) {
-                results = results.stream()
-                    .filter(invoice -> invoice.getDueDate().isBefore(LocalDate.now()))
-                    .toList();
-            }
-            
             populateTable(results);
             logger.info("Filter by payment status '" + selectedStatus + "' returned " + results.size() + " results");
         } catch (Exception e) {
             logger.severe("Error filtering invoices by payment status: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
                 "Error filtering invoices: " + e.getMessage(),
-                "Filter Error",
-                JOptionPane.ERROR_MESSAGE);
-        }
-    }
-    
-    private void filterOverdue() {
-        if (!overdueOnlyFilter.isSelected()) {
-            // If unchecked, just apply payment status filter
-            filterByPaymentStatus();
-            return;
-        }
-        
-        try {
-            List<Invoice> results = invoiceDAO.findOverdue();
-            populateTable(results);
-            logger.info("Overdue filter returned " + results.size() + " results");
-        } catch (Exception e) {
-            logger.severe("Error filtering overdue invoices: " + e.getMessage());
-            JOptionPane.showMessageDialog(this,
-                "Error filtering overdue invoices: " + e.getMessage(),
                 "Filter Error",
                 JOptionPane.ERROR_MESSAGE);
         }
@@ -237,7 +198,7 @@ public class InvoicePanel extends JPanel {
         if (selectedRow == -1) return;
         
         // TODO: Implement edit invoice dialog
-        Long invoiceId = (Long) tableModel.getValueAt(selectedRow, 0);
+        Integer invoiceId = (Integer) tableModel.getValueAt(selectedRow, 0);
         JOptionPane.showMessageDialog(this,
             "Edit Invoice dialog for ID " + invoiceId + " will be implemented in the next phase.",
             "Feature Coming Soon",
@@ -248,7 +209,7 @@ public class InvoicePanel extends JPanel {
         int selectedRow = invoiceTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        Long invoiceId = (Long) tableModel.getValueAt(selectedRow, 0);
+        Integer invoiceId = (Integer) tableModel.getValueAt(selectedRow, 0);
         String amount = (String) tableModel.getValueAt(selectedRow, 2);
         
         int choice = JOptionPane.showConfirmDialog(this,
@@ -263,7 +224,6 @@ public class InvoicePanel extends JPanel {
                 Invoice invoice = invoiceDAO.findById(invoiceId);
                 if (invoice != null) {
                     invoice.setPaid(true);
-                    invoice.setPaymentDate(LocalDate.now());
                     invoiceDAO.update(invoice);
                     refreshData();
                     JOptionPane.showMessageDialog(this,
@@ -285,7 +245,7 @@ public class InvoicePanel extends JPanel {
         int selectedRow = invoiceTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        Long invoiceId = (Long) tableModel.getValueAt(selectedRow, 0);
+        Integer invoiceId = (Integer) tableModel.getValueAt(selectedRow, 0);
         String amount = (String) tableModel.getValueAt(selectedRow, 2);
         
         int choice = JOptionPane.showConfirmDialog(this,
@@ -315,6 +275,5 @@ public class InvoicePanel extends JPanel {
     public void refreshData() {
         loadInvoiceData();
         paymentStatusFilter.setSelectedIndex(0); // Reset to "All"
-        overdueOnlyFilter.setSelected(false); // Clear overdue filter
     }
 }

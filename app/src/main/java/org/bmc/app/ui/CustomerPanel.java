@@ -142,8 +142,8 @@ public class CustomerPanel extends JPanel {
         for (Customer customer : customers) {
             Object[] row = {
                 customer.getCustomerId(),
-                customer.getCompanyName(),
-                customer.getContactName(),
+                customer.getName(),
+                "", // No separate contact name in model
                 customer.getPhone(),
                 customer.getEmail(),
                 customer.getAddress()
@@ -197,7 +197,7 @@ public class CustomerPanel extends JPanel {
         int selectedRow = customerTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        Long customerId = (Long) tableModel.getValueAt(selectedRow, 0);
+        Integer customerId = (Integer) tableModel.getValueAt(selectedRow, 0);
         String companyName = (String) tableModel.getValueAt(selectedRow, 1);
         
         int choice = JOptionPane.showConfirmDialog(this,

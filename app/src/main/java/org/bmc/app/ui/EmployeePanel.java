@@ -80,7 +80,7 @@ public class EmployeePanel extends JPanel {
     }
     
     private void createTable() {
-        String[] columnNames = {"ID", "First Name", "Last Name", "Role", "Email", "Phone", "Hire Date"};
+        String[] columnNames = {"ID", "Name", "Role", "Specialization", "Contact Info"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -100,9 +100,10 @@ public class EmployeePanel extends JPanel {
         
         // Set column widths
         employeeTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // ID
-        employeeTable.getColumnModel().getColumn(1).setPreferredWidth(100); // First Name
-        employeeTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Last Name
-        employeeTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Role
+        employeeTable.getColumnModel().getColumn(1).setPreferredWidth(150); // Name
+        employeeTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Role
+        employeeTable.getColumnModel().getColumn(3).setPreferredWidth(150); // Specialization
+        employeeTable.getColumnModel().getColumn(4).setPreferredWidth(200); // Contact Info
         employeeTable.getColumnModel().getColumn(4).setPreferredWidth(180); // Email
         employeeTable.getColumnModel().getColumn(5).setPreferredWidth(120); // Phone
         employeeTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Hire Date
@@ -138,12 +139,10 @@ public class EmployeePanel extends JPanel {
         for (Employee employee : employees) {
             Object[] row = {
                 employee.getEmployeeId(),
-                employee.getFirstName(),
-                employee.getLastName(),
+                employee.getName(),
                 employee.getRole(),
-                employee.getEmail(),
-                employee.getPhone(),
-                employee.getHireDate()
+                employee.getSpecialization(),
+                employee.getContactInfo()
             };
             tableModel.addRow(row);
         }
@@ -158,9 +157,15 @@ public class EmployeePanel extends JPanel {
         }
         
         try {
-            List<Employee> results = employeeDAO.findByRole(selectedRole);
-            populateTable(results);
-            logger.info("Filter by role '" + selectedRole + "' returned " + results.size() + " results");
+            Employee.Role role = Employee.Role.fromString(selectedRole);
+            if (role != null) {
+                List<Employee> results = employeeDAO.findByRole(role);
+                populateTable(results);
+                logger.info("Filter by role '" + selectedRole + "' returned " + results.size() + " results");
+            } else {
+                logger.warning("Invalid role selected: " + selectedRole);
+                loadEmployeeData(); // Fallback to showing all
+            }
         } catch (Exception e) {
             logger.severe("Error filtering employees: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
@@ -194,8 +199,8 @@ public class EmployeePanel extends JPanel {
         int selectedRow = employeeTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        Long employeeId = (Long) tableModel.getValueAt(selectedRow, 0);
-        String name = tableModel.getValueAt(selectedRow, 1) + " " + tableModel.getValueAt(selectedRow, 2);
+        Integer employeeId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        String name = (String) tableModel.getValueAt(selectedRow, 1);
         
         int choice = JOptionPane.showConfirmDialog(this,
             "Are you sure you want to delete employee:\n" + name + " (ID: " + employeeId + ")?",
