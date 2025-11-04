@@ -4,6 +4,7 @@ org\bmc\app\model\Job.class
 org\bmc\app\model\Customer.class
 org\bmc\app\dao\EmployeeDAO.class
 org\bmc\app\dao\JobDAO.class
+org\bmc\app\test\DatabaseConnectionTest.class
 org\bmc\app\dao\InvoiceDAO.class
 org\bmc\app\util\DBConnection.class
 org\bmc\app\model\Job$Status.class
