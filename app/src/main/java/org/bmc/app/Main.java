@@ -1,43 +1,55 @@
 package org.bmc.app;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.bmc.app.dao.CustomerDAO;
-import org.bmc.app.model.Customer;
+import org.bmc.app.ui.MainFrame;
 import org.bmc.app.util.DBConnection;
+import java.sql.Connection;
+import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 /**
- * Main application entry point for Baltimore Metal Crafters DB App.
- * Provides a simple console interface to test database operations.
+ * Main application entry point for Baltimore Metal Crafters database application.
  */
 public class Main {
-    
-    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
     
     public static void main(String[] args) {
-        LOGGER.info("Starting Baltimore Metal Crafters DB Application");
+        logger.info("Starting Baltimore Metal Crafters Database Application...");
         
-        // Test database connection
-        if (testDatabaseConnection()) {
-            LOGGER.info("Database connection successful");
-            
-            // Test Customer DAO operations
-            testCustomerOperations();
-            
-        } else {
-            LOGGER.severe("Failed to connect to database. Please check your configuration.");
+        // Test database connection first
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn != null) {
+                logger.info("Database connection successful!");
+                logger.info("Connected to: " + conn.getMetaData().getURL());
+                
+                // Launch the GUI on the Event Dispatch Thread
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        // Set system look and feel
+                        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeel());
+                        
+                        // Create and show the main application window
+                        MainFrame mainFrame = new MainFrame();
+                        mainFrame.setVisible(true);
+                        
+                        logger.info("Application GUI launched successfully");
+                    } catch (Exception e) {
+                        logger.severe("Error launching GUI: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
+                
+            } else {
+                logger.severe("Failed to establish database connection");
+                System.exit(1);
+            }
+        } catch (Exception e) {
+            logger.severe("Database connection error: " + e.getMessage());
+            e.printStackTrace();
             System.exit(1);
         }
-        
-        LOGGER.info("Application completed");
     }
-    
-    /**
-     * Tests the database connection
-     */
-    private static boolean testDatabaseConnection() {
+}
         try {
             boolean connected = DBConnection.testConnection();
             if (connected) {
