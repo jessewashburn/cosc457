@@ -1,7 +1,5 @@
 # TESTING & DATA MANAGEMENT GUIDE - FOR BRYAN
 
-**Hi Bryan!** You're the quality assurance specialist for the Baltimore Metal Crafters application. Your testing and data management work is crucial for project success.
-
 ## Quick Setup (Same as Luke)
 
 ### Step 1: Check Prerequisites
