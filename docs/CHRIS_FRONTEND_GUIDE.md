@@ -280,14 +280,11 @@ private void editCustomer() {
 - Test after each dialog you create
 - Look at the existing model classes to see what fields each entity has
 
-**You've got this! The backend does all the heavy lifting - you just need to create nice forms!**
-
 ## Working with Bryan
 
-Bryan is testing the application. When you finish each dialog:
+Bryan is testing the application. When you finish the dialogs:
 1. Let Bryan know it's ready to test
 2. He'll try to break it and give you feedback
 3. Fix any issues he finds
 4. Move on to the next dialog
 
-Remember: Bryan's feedback is gold - he'll find the edge cases you missed!
