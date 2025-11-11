@@ -2,7 +2,7 @@
 
 **Hi Bryan!** You're the quality assurance specialist for the Baltimore Metal Crafters application. Your testing and data management work is crucial for project success.
 
-## Quick Setup (Same as Chris)
+## Quick Setup (Same as Luke)
 
 ### Step 1: Check Prerequisites
 ```bash
@@ -139,10 +139,10 @@ INSERT INTO invoices (job_id, amount, date_issued, due_date, is_paid, payment_da
 (7, 2800.00, '2024-10-01', '2024-11-01', TRUE, '2024-10-25'); -- Paid
 ```
 
-### Phase 3: Quality Assurance (After Chris adds dialogs)
+### Phase 3: Quality Assurance (After Luke adds dialogs)
 
 #### Dialog Testing Checklist
-When Chris creates each dialog, test:
+When Luke creates each dialog, test:
 
 **CustomerDialog**:
 - [ ] Opens when clicking "Add Customer"
@@ -234,7 +234,7 @@ APPLICATION CORE:
 [DONE] Invoice Panel - Basic Functions
 [WARN] Delete Operations - [note any issues]
 
-DIALOGS (waiting for Chris):
+DIALOGS (waiting for Luke):
 [WAIT] CustomerDialog - Not yet available
 [WAIT] EmployeeDialog - Not yet available
 [WAIT] JobDialog - Not yet available
