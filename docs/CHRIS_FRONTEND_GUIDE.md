@@ -1,6 +1,4 @@
-# FRONTEND DEVELOPMENT GUIDE - FOR CHRIS
-
-**Hi Chris!** This is your complete guide to developing the Swing UI dialogs for the Baltimore Metal Crafters application.
+# FRONTEND DEVELOPMENT GUIDE - FOR LUKE
 
 ## Quick Setup (5 minutes)
 
