@@ -21,6 +21,10 @@
 
 ### 2. Run the Application
 
+**Option 1: Double-click the JAR file**
+- Simply double-click `bmc-app-1.0.0.jar` to launch
+
+**Option 2: Run from command line**
 ```bash
 java -jar bmc-app-1.0.0.jar
 ```
