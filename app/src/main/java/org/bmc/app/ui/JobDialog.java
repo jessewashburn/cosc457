@@ -4,6 +4,7 @@ import org.bmc.app.dao.CustomerDAO;
 import org.bmc.app.dao.JobDAO;
 import org.bmc.app.model.Customer;
 import org.bmc.app.model.Job;
+
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
@@ -12,25 +13,35 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
- * Dialog for adding or editing job records.
+ * Modal dialog for creating new jobs or editing existing job records.
+ * Provides form validation, customer selection, and database persistence through JobDAO.
+ * 
+ * @author Baltimore Metal Crafters Team
  */
 public class JobDialog extends JDialog {
-    private JobDAO jobDAO = new JobDAO();
-    private CustomerDAO customerDAO = new CustomerDAO();
-    private Job job;
-    private boolean saved = false;
     
-    // Form fields
-    private JComboBox<CustomerItem> customerCombo = new JComboBox<>();
-    private JTextArea descriptionArea = new JTextArea(4, 30);
-    private JComboBox<Job.Status> statusCombo = new JComboBox<>(Job.Status.values());
-    private JTextField startDateField = new JTextField(15);
-    private JTextField dueDateField = new JTextField(15);
+    private static final int DESC_ROWS = 4;
+    private static final int DESC_COLS = 30;
+    private static final int DATE_FIELD_COLS = 15;
+    private static final String DATE_FORMAT_HINT = " (YYYY-MM-DD)";
     
-    // Helper class for customer combo box
+    private final JobDAO jobDAO;
+    private final CustomerDAO customerDAO;
+    private final Job job;
+    private boolean saved;
+    
+    private JComboBox<CustomerItem> customerCombo;
+    private JTextArea descriptionArea;
+    private JComboBox<Job.Status> statusCombo;
+    private JTextField startDateField;
+    private JTextField dueDateField;
+    
+    /**
+     * Wrapper class for displaying customer information in combo box.
+     */
     private static class CustomerItem {
-        Integer id;
-        String name;
+        final Integer id;
+        final String name;
         
         CustomerItem(Integer id, String name) {
             this.id = id;
@@ -45,80 +56,95 @@ public class JobDialog extends JDialog {
     
     public JobDialog(Frame parent, Job job) {
         super(parent, job == null ? "Add Job" : "Edit Job", true);
+        this.jobDAO = new JobDAO();
+        this.customerDAO = new CustomerDAO();
         this.job = job;
+        this.saved = false;
         
-        setupUI();
+        initializeComponents();
+        layoutComponents();
         loadCustomers();
+        
         if (job != null) {
-            fillFields();
+            populateFields();
         }
+        
+        pack();
+        setLocationRelativeTo(parent);
     }
     
-    private void setupUI() {
+    private void initializeComponents() {
+        customerCombo = new JComboBox<>();
+        descriptionArea = new JTextArea(DESC_ROWS, DESC_COLS);
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        statusCombo = new JComboBox<>(Job.Status.values());
+        startDateField = new JTextField(DATE_FIELD_COLS);
+        dueDateField = new JTextField(DATE_FIELD_COLS);
+    }
+    
+    private void layoutComponents() {
         setLayout(new BorderLayout(10, 10));
+        add(createFormPanel(), BorderLayout.CENTER);
+        add(createButtonPanel(), BorderLayout.SOUTH);
+    }
+    
+    private JPanel createFormPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Create form panel
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        // Customer combo
-        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Customer:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(customerCombo, gbc);
+        addFormRow(panel, gbc, 0, "Customer:", customerCombo);
         
-        // Description area
-        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.NORTHEAST;
-        formPanel.add(new JLabel("Description:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        descriptionArea.setLineWrap(true);
-        descriptionArea.setWrapStyleWord(true);
-        JScrollPane descScroll = new JScrollPane(descriptionArea);
-        formPanel.add(descScroll, gbc);
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.NORTHEAST;
+        panel.add(new JLabel("Description:"), gbc);
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(new JScrollPane(descriptionArea), gbc);
         
-        // Status combo
-        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Status:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(statusCombo, gbc);
+        addFormRow(panel, gbc, 2, "Status:", statusCombo);
+        addFormRow(panel, gbc, 3, "Start Date:", createDatePanel(startDateField));
+        addFormRow(panel, gbc, 4, "Due Date:", createDatePanel(dueDateField));
         
-        // Start date field
-        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Start Date:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        JPanel startDatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        startDatePanel.add(startDateField);
-        startDatePanel.add(new JLabel(" (YYYY-MM-DD)"));
-        formPanel.add(startDatePanel, gbc);
+        return panel;
+    }
+    
+    private JPanel createDatePanel(JTextField dateField) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        panel.add(dateField);
+        panel.add(new JLabel(DATE_FORMAT_HINT));
+        return panel;
+    }
+    
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
+        gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        panel.add(new JLabel(label), gbc);
         
-        // Due date field
-        gbc.gridx = 0; gbc.gridy = 4; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Due Date:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        JPanel dueDatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        dueDatePanel.add(dueDateField);
-        dueDatePanel.add(new JLabel(" (YYYY-MM-DD)"));
-        formPanel.add(dueDatePanel, gbc);
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(field, gbc);
+    }
+    
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        // Button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveButton = new JButton("Save");
         JButton cancelButton = new JButton("Cancel");
         
-        saveButton.addActionListener(e -> saveJob());
+        saveButton.addActionListener(e -> handleSave());
         cancelButton.addActionListener(e -> dispose());
         
-        buttonPanel.add(saveButton);
-        buttonPanel.add(cancelButton);
+        panel.add(saveButton);
+        panel.add(cancelButton);
         
-        add(formPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
-        
-        pack();
-        setLocationRelativeTo(getParent());
+        return panel;
     }
     
     private void loadCustomers() {
@@ -129,13 +155,11 @@ public class JobDialog extends JDialog {
                 customerCombo.addItem(new CustomerItem(c.getCustomerId(), c.getName()));
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error loading customers: " + e.getMessage(),
-                "Load Error", JOptionPane.ERROR_MESSAGE);
+            showErrorDialog("Error loading customers: " + e.getMessage());
         }
     }
     
-    private void fillFields() {
-        // Select the right customer
+    private void populateFields() {
         for (int i = 0; i < customerCombo.getItemCount(); i++) {
             CustomerItem item = customerCombo.getItemAt(i);
             if (item.id.equals(job.getCustomerId())) {
@@ -155,66 +179,73 @@ public class JobDialog extends JDialog {
         }
     }
     
-    private void saveJob() {
+    private void handleSave() {
+        if (!validateInput()) {
+            return;
+        }
+        
         try {
-            // Validate
-            if (customerCombo.getSelectedItem() == null) {
-                JOptionPane.showMessageDialog(this, "Customer is required!", "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            if (descriptionArea.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Description is required!", "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // Parse dates
-            LocalDate startDate = null;
-            LocalDate dueDate = null;
-            
-            try {
-                if (!startDateField.getText().trim().isEmpty()) {
-                    startDate = LocalDate.parse(startDateField.getText().trim(), DateTimeFormatter.ISO_LOCAL_DATE);
-                }
-                if (!dueDateField.getText().trim().isEmpty()) {
-                    dueDate = LocalDate.parse(dueDateField.getText().trim(), DateTimeFormatter.ISO_LOCAL_DATE);
-                }
-            } catch (DateTimeParseException e) {
-                JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD", 
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
             CustomerItem selectedCustomer = (CustomerItem) customerCombo.getSelectedItem();
+            LocalDate startDate = parseDateField(startDateField);
+            LocalDate dueDate = parseDateField(dueDateField);
             
             if (job == null) {
-                // New job
-                Job newJob = new Job(
-                    selectedCustomer.id,
-                    null,  // quoteId
-                    descriptionArea.getText().trim(),
-                    startDate,
-                    dueDate,
-                    (Job.Status) statusCombo.getSelectedItem()
-                );
-                jobDAO.create(newJob);
+                createNewJob(selectedCustomer.id, startDate, dueDate);
             } else {
-                // Update existing
-                job.setCustomerId(selectedCustomer.id);
-                job.setDescription(descriptionArea.getText().trim());
-                job.setStartDate(startDate);
-                job.setDueDate(dueDate);
-                job.setStatus((Job.Status) statusCombo.getSelectedItem());
-                jobDAO.update(job);
+                updateExistingJob(selectedCustomer.id, startDate, dueDate);
             }
             
             saved = true;
             dispose();
-            
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error saving job: " + e.getMessage(), 
-                "Save Error", JOptionPane.ERROR_MESSAGE);
+            showErrorDialog("Error saving job: " + e.getMessage());
         }
+    }
+    
+    private boolean validateInput() {
+        if (customerCombo.getSelectedItem() == null) {
+            showErrorDialog("Customer is required.");
+            customerCombo.requestFocus();
+            return false;
+        }
+        
+        if (descriptionArea.getText().trim().isEmpty()) {
+            showErrorDialog("Description is required.");
+            descriptionArea.requestFocus();
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private LocalDate parseDateField(JTextField field) throws DateTimeParseException {
+        String text = field.getText().trim();
+        return text.isEmpty() ? null : LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
+    }
+    
+    private void createNewJob(Integer customerId, LocalDate startDate, LocalDate dueDate) throws Exception {
+        Job newJob = new Job(
+            customerId,
+            null,
+            descriptionArea.getText().trim(),
+            startDate,
+            dueDate,
+            (Job.Status) statusCombo.getSelectedItem()
+        );
+        jobDAO.create(newJob);
+    }
+    
+    private void updateExistingJob(Integer customerId, LocalDate startDate, LocalDate dueDate) throws Exception {
+        job.setCustomerId(customerId);
+        job.setDescription(descriptionArea.getText().trim());
+        job.setStartDate(startDate);
+        job.setDueDate(dueDate);
+        job.setStatus((Job.Status) statusCombo.getSelectedItem());
+        jobDAO.update(job);
+    }
+    
+    private void showErrorDialog(String message) {
+        JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
     }
     
     public boolean wasSaved() {

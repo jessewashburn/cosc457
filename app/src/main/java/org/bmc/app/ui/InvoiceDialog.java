@@ -4,6 +4,7 @@ import org.bmc.app.dao.InvoiceDAO;
 import org.bmc.app.dao.JobDAO;
 import org.bmc.app.model.Invoice;
 import org.bmc.app.model.Job;
+
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigDecimal;
@@ -13,24 +14,34 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
- * Dialog for adding or editing invoice records.
+ * Modal dialog for creating new invoices or editing existing invoice records.
+ * Provides form validation, job selection, and database persistence through InvoiceDAO.
+ * 
+ * @author Baltimore Metal Crafters Team
  */
 public class InvoiceDialog extends JDialog {
-    private InvoiceDAO invoiceDAO = new InvoiceDAO();
-    private JobDAO jobDAO = new JobDAO();
-    private Invoice invoice;
-    private boolean saved = false;
     
-    // Form fields
-    private JComboBox<JobItem> jobCombo = new JComboBox<>();
-    private JTextField totalAmountField = new JTextField(15);
-    private JTextField invoiceDateField = new JTextField(15);
-    private JCheckBox paidCheckBox = new JCheckBox("Invoice Paid");
+    private static final int AMOUNT_FIELD_COLS = 15;
+    private static final int DATE_FIELD_COLS = 15;
+    private static final String DATE_FORMAT_HINT = " (YYYY-MM-DD)";
+    private static final int JOB_DESC_MAX_LENGTH = 40;
     
-    // Helper class for job combo box
+    private final InvoiceDAO invoiceDAO;
+    private final JobDAO jobDAO;
+    private final Invoice invoice;
+    private boolean saved;
+    
+    private JComboBox<JobItem> jobCombo;
+    private JTextField totalAmountField;
+    private JTextField invoiceDateField;
+    private JCheckBox paidCheckBox;
+    
+    /**
+     * Wrapper class for displaying job information in combo box.
+     */
     private static class JobItem {
-        Integer id;
-        String description;
+        final Integer id;
+        final String description;
         
         JobItem(Integer id, String description) {
             this.id = id;
@@ -39,80 +50,101 @@ public class InvoiceDialog extends JDialog {
         
         @Override
         public String toString() {
-            return "Job #" + id + ": " + (description.length() > 40 ? description.substring(0, 40) + "..." : description);
+            if (description.length() > JOB_DESC_MAX_LENGTH) {
+                return "Job #" + id + ": " + description.substring(0, JOB_DESC_MAX_LENGTH) + "...";
+            }
+            return "Job #" + id + ": " + description;
         }
     }
     
     public InvoiceDialog(Frame parent, Invoice invoice) {
         super(parent, invoice == null ? "Add Invoice" : "Edit Invoice", true);
+        this.invoiceDAO = new InvoiceDAO();
+        this.jobDAO = new JobDAO();
         this.invoice = invoice;
+        this.saved = false;
         
-        setupUI();
+        initializeComponents();
+        layoutComponents();
         loadJobs();
+        
         if (invoice != null) {
-            fillFields();
+            populateFields();
         } else {
-            // Set default date to today
-            invoiceDateField.setText(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            setDefaultValues();
         }
+        
+        pack();
+        setLocationRelativeTo(parent);
     }
     
-    private void setupUI() {
+    private void initializeComponents() {
+        jobCombo = new JComboBox<>();
+        totalAmountField = new JTextField(AMOUNT_FIELD_COLS);
+        invoiceDateField = new JTextField(DATE_FIELD_COLS);
+        paidCheckBox = new JCheckBox("Invoice Paid");
+    }
+    
+    private void layoutComponents() {
         setLayout(new BorderLayout(10, 10));
+        add(createFormPanel(), BorderLayout.CENTER);
+        add(createButtonPanel(), BorderLayout.SOUTH);
+    }
+    
+    private JPanel createFormPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Create form panel
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        // Job combo
-        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Job:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(jobCombo, gbc);
+        addFormRow(panel, gbc, 0, "Job:", jobCombo);
+        addFormRow(panel, gbc, 1, "Total Amount:", createAmountPanel());
+        addFormRow(panel, gbc, 2, "Invoice Date:", createDatePanel());
+        addFormRow(panel, gbc, 3, "Payment Status:", paidCheckBox);
         
-        // Total amount field
-        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Total Amount:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        JPanel amountPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        amountPanel.add(new JLabel("$"));
-        amountPanel.add(totalAmountField);
-        formPanel.add(amountPanel, gbc);
+        return panel;
+    }
+    
+    private JPanel createAmountPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        panel.add(new JLabel("$"));
+        panel.add(totalAmountField);
+        return panel;
+    }
+    
+    private JPanel createDatePanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        panel.add(invoiceDateField);
+        panel.add(new JLabel(DATE_FORMAT_HINT));
+        return panel;
+    }
+    
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
+        gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        panel.add(new JLabel(label), gbc);
         
-        // Invoice date field
-        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Invoice Date:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        datePanel.add(invoiceDateField);
-        datePanel.add(new JLabel(" (YYYY-MM-DD)"));
-        formPanel.add(datePanel, gbc);
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(field, gbc);
+    }
+    
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        // Paid checkbox
-        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Payment Status:"), gbc);
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(paidCheckBox, gbc);
-        
-        // Button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveButton = new JButton("Save");
         JButton cancelButton = new JButton("Cancel");
         
-        saveButton.addActionListener(e -> saveInvoice());
+        saveButton.addActionListener(e -> handleSave());
         cancelButton.addActionListener(e -> dispose());
         
-        buttonPanel.add(saveButton);
-        buttonPanel.add(cancelButton);
+        panel.add(saveButton);
+        panel.add(cancelButton);
         
-        add(formPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
-        
-        pack();
-        setLocationRelativeTo(getParent());
+        return panel;
     }
     
     private void loadJobs() {
@@ -123,13 +155,11 @@ public class InvoiceDialog extends JDialog {
                 jobCombo.addItem(new JobItem(j.getJobId(), j.getDescription()));
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error loading jobs: " + e.getMessage(),
-                "Load Error", JOptionPane.ERROR_MESSAGE);
+            showErrorDialog("Error loading jobs: " + e.getMessage());
         }
     }
     
-    private void fillFields() {
-        // Select the right job
+    private void populateFields() {
         for (int i = 0; i < jobCombo.getItemCount(); i++) {
             JobItem item = jobCombo.getItemAt(i);
             if (item.id.equals(invoice.getJobId())) {
@@ -149,71 +179,90 @@ public class InvoiceDialog extends JDialog {
         paidCheckBox.setSelected(invoice.getPaid() != null && invoice.getPaid());
     }
     
-    private void saveInvoice() {
+    private void setDefaultValues() {
+        invoiceDateField.setText(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+    }
+    
+    private void handleSave() {
+        if (!validateInput()) {
+            return;
+        }
+        
         try {
-            // Validate
-            if (jobCombo.getSelectedItem() == null) {
-                JOptionPane.showMessageDialog(this, "Job is required!", "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            if (totalAmountField.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Total amount is required!", "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // Parse amount
-            BigDecimal totalAmount;
-            try {
-                totalAmount = new BigDecimal(totalAmountField.getText().trim());
-                if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
-                    JOptionPane.showMessageDialog(this, "Amount must be positive!", 
-                        "Validation Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Invalid amount format!", 
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // Parse date
-            LocalDate invoiceDate;
-            try {
-                invoiceDate = LocalDate.parse(invoiceDateField.getText().trim(), DateTimeFormatter.ISO_LOCAL_DATE);
-            } catch (DateTimeParseException e) {
-                JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD", 
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
             JobItem selectedJob = (JobItem) jobCombo.getSelectedItem();
+            BigDecimal amount = parseAmount();
+            LocalDate date = parseDate();
             
             if (invoice == null) {
-                // New invoice
-                Invoice newInvoice = new Invoice(
-                    selectedJob.id,
-                    invoiceDate,
-                    totalAmount,
-                    paidCheckBox.isSelected()
-                );
-                invoiceDAO.create(newInvoice);
+                createNewInvoice(selectedJob.id, amount, date);
             } else {
-                // Update existing
-                invoice.setJobId(selectedJob.id);
-                invoice.setInvoiceDate(invoiceDate);
-                invoice.setTotalAmount(totalAmount);
-                invoice.setPaid(paidCheckBox.isSelected());
-                invoiceDAO.update(invoice);
+                updateExistingInvoice(selectedJob.id, amount, date);
             }
             
             saved = true;
             dispose();
-            
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error saving invoice: " + e.getMessage(), 
-                "Save Error", JOptionPane.ERROR_MESSAGE);
+            showErrorDialog("Error saving invoice: " + e.getMessage());
         }
+    }
+    
+    private boolean validateInput() {
+        if (jobCombo.getSelectedItem() == null) {
+            showErrorDialog("Job is required.");
+            jobCombo.requestFocus();
+            return false;
+        }
+        
+        if (totalAmountField.getText().trim().isEmpty()) {
+            showErrorDialog("Total amount is required.");
+            totalAmountField.requestFocus();
+            return false;
+        }
+        
+        try {
+            BigDecimal amount = new BigDecimal(totalAmountField.getText().trim());
+            if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                showErrorDialog("Amount must be positive.");
+                totalAmountField.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            showErrorDialog("Invalid amount format.");
+            totalAmountField.requestFocus();
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private BigDecimal parseAmount() {
+        return new BigDecimal(totalAmountField.getText().trim());
+    }
+    
+    private LocalDate parseDate() throws DateTimeParseException {
+        return LocalDate.parse(invoiceDateField.getText().trim(), DateTimeFormatter.ISO_LOCAL_DATE);
+    }
+    
+    private void createNewInvoice(Integer jobId, BigDecimal amount, LocalDate date) throws Exception {
+        Invoice newInvoice = new Invoice(
+            jobId,
+            date,
+            amount,
+            paidCheckBox.isSelected()
+        );
+        invoiceDAO.create(newInvoice);
+    }
+    
+    private void updateExistingInvoice(Integer jobId, BigDecimal amount, LocalDate date) throws Exception {
+        invoice.setJobId(jobId);
+        invoice.setInvoiceDate(date);
+        invoice.setTotalAmount(amount);
+        invoice.setPaid(paidCheckBox.isSelected());
+        invoiceDAO.update(invoice);
+    }
+    
+    private void showErrorDialog(String message) {
+        JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
     }
     
     public boolean wasSaved() {
