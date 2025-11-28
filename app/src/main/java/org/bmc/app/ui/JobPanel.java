@@ -215,23 +215,30 @@ public class JobPanel extends JPanel {
     }
     
     private void addJob() {
-        // TODO: Implement add job dialog
-        JOptionPane.showMessageDialog(this,
-            "Add Job dialog will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        JobDialog dialog = new JobDialog((Frame) SwingUtilities.getWindowAncestor(this), null);
+        dialog.setVisible(true);
+        if (dialog.wasSaved()) {
+            refreshData();
+        }
     }
     
     private void editJob() {
         int selectedRow = jobTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        // TODO: Implement edit job dialog
         Integer jobId = (Integer) tableModel.getValueAt(selectedRow, 0);
-        JOptionPane.showMessageDialog(this,
-            "Edit Job dialog for ID " + jobId + " will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        try {
+            Job job = jobDAO.findById(jobId);
+            JobDialog dialog = new JobDialog((Frame) SwingUtilities.getWindowAncestor(this), job);
+            dialog.setVisible(true);
+            if (dialog.wasSaved()) {
+                refreshData();
+            }
+        } catch (Exception e) {
+            logger.severe("Error loading job: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error loading job: " + e.getMessage(),
+                "Load Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private void deleteJob() {

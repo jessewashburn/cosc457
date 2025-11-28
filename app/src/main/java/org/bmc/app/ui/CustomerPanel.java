@@ -174,23 +174,30 @@ public class CustomerPanel extends JPanel {
     }
     
     private void addCustomer() {
-        // TODO: Implement add customer dialog
-        JOptionPane.showMessageDialog(this,
-            "Add Customer dialog will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        CustomerDialog dialog = new CustomerDialog((Frame) SwingUtilities.getWindowAncestor(this), null);
+        dialog.setVisible(true);
+        if (dialog.wasSaved()) {
+            refreshData();
+        }
     }
     
     private void editCustomer() {
         int selectedRow = customerTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        // TODO: Implement edit customer dialog
-        Long customerId = (Long) tableModel.getValueAt(selectedRow, 0);
-        JOptionPane.showMessageDialog(this,
-            "Edit Customer dialog for ID " + customerId + " will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        Integer customerId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        try {
+            Customer customer = customerDAO.findById(customerId);
+            CustomerDialog dialog = new CustomerDialog((Frame) SwingUtilities.getWindowAncestor(this), customer);
+            dialog.setVisible(true);
+            if (dialog.wasSaved()) {
+                refreshData();
+            }
+        } catch (Exception e) {
+            logger.severe("Error loading customer: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error loading customer: " + e.getMessage(),
+                "Load Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private void deleteCustomer() {

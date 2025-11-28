@@ -2,6 +2,7 @@ package org.bmc.app.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -195,23 +196,30 @@ public class InvoicePanel extends JPanel {
     }
     
     private void addInvoice() {
-        // TODO: Implement add invoice dialog
-        JOptionPane.showMessageDialog(this,
-            "Add Invoice dialog will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        InvoiceDialog dialog = new InvoiceDialog((Frame) javax.swing.SwingUtilities.getWindowAncestor(this), null);
+        dialog.setVisible(true);
+        if (dialog.wasSaved()) {
+            refreshData();
+        }
     }
     
     private void editInvoice() {
         int selectedRow = invoiceTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        // TODO: Implement edit invoice dialog
         Integer invoiceId = (Integer) tableModel.getValueAt(selectedRow, 0);
-        JOptionPane.showMessageDialog(this,
-            "Edit Invoice dialog for ID " + invoiceId + " will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        try {
+            Invoice invoice = invoiceDAO.findById(invoiceId);
+            InvoiceDialog dialog = new InvoiceDialog((Frame) javax.swing.SwingUtilities.getWindowAncestor(this), invoice);
+            dialog.setVisible(true);
+            if (dialog.wasSaved()) {
+                refreshData();
+            }
+        } catch (Exception e) {
+            logger.severe("Error loading invoice: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error loading invoice: " + e.getMessage(),
+                "Load Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private void markAsPaid() {

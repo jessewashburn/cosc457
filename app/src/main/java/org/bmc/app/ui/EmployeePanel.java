@@ -2,6 +2,7 @@ package org.bmc.app.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -185,23 +186,30 @@ public class EmployeePanel extends JPanel {
     }
     
     private void addEmployee() {
-        // TODO: Implement add employee dialog
-        JOptionPane.showMessageDialog(this,
-            "Add Employee dialog will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        EmployeeDialog dialog = new EmployeeDialog((Frame) javax.swing.SwingUtilities.getWindowAncestor(this), null);
+        dialog.setVisible(true);
+        if (dialog.wasSaved()) {
+            refreshData();
+        }
     }
     
     private void editEmployee() {
         int selectedRow = employeeTable.getSelectedRow();
         if (selectedRow == -1) return;
         
-        // TODO: Implement edit employee dialog
-        Long employeeId = (Long) tableModel.getValueAt(selectedRow, 0);
-        JOptionPane.showMessageDialog(this,
-            "Edit Employee dialog for ID " + employeeId + " will be implemented in the next phase.",
-            "Feature Coming Soon",
-            JOptionPane.INFORMATION_MESSAGE);
+        Integer employeeId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        try {
+            Employee employee = employeeDAO.findById(employeeId);
+            EmployeeDialog dialog = new EmployeeDialog((Frame) javax.swing.SwingUtilities.getWindowAncestor(this), employee);
+            dialog.setVisible(true);
+            if (dialog.wasSaved()) {
+                refreshData();
+            }
+        } catch (Exception e) {
+            logger.severe("Error loading employee: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error loading employee: " + e.getMessage(),
+                "Load Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private void deleteEmployee() {
