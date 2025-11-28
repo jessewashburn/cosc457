@@ -8,15 +8,16 @@ Java Swing application for managing restoration projects, customer relationships
 
 ## Quick Start
 
+**Run (Pre-built):**
+```bash
+java -jar app/target/bmc-app-1.0.0.jar
+```
+*Uses default database configuration (jwashb2 credentials on triton.towson.edu:3360)*
+
 **Build:**
 ```bash
 cd app
 mvn clean package
-```
-
-**Run:**
-```bash
-java -jar app/target/bmc-app-1.0.0.jar
 ```
 
 ## Database Setup
