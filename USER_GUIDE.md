@@ -29,7 +29,7 @@
 java -jar bmc-app-1.0.0.jar
 ```
 
-**Requirements:** Java 21 or higher
+**Requirements:** Java 25 or higher
 
 ### 3. Use the Application
 
@@ -56,7 +56,7 @@ java -jar bmc-app-1.0.0.jar
 - Contact instructor for database credentials
 
 **"UnsupportedClassVersionError"**
-- Install Java 21 or higher
+- Install Java 25 or higher
 
 ## Support
 

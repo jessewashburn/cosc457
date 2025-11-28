@@ -4,7 +4,7 @@ Java Swing application for managing restoration projects, customer relationships
 
 ## Technology Stack
 
-- **Java 21** | **MySQL 8.x** | **Maven 3.9+** | **Swing GUI**
+- **Java 25** | **MySQL 8.x** | **Maven 3.9+** | **Swing GUI**
 
 ## Quick Start
 
