@@ -1,11 +1,10 @@
 -- ===========================================================
--- Baltimore Metal Crafters Database (bmc_db)
+-- Baltimore Metal Crafters Database (jwashb2db)
 -- Phase 2 Physical Schema
 -- ===========================================================
 
-CREATE DATABASE IF NOT EXISTS bmc_db
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-USE bmc_db;
+-- Using existing database jwashb2db
+USE jwashb2db;
 
 -- ===========================================================
 -- 1. CUSTOMER

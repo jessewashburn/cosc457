@@ -1,9 +1,9 @@
 -- ===========================================================
--- Baltimore Metal Crafters Database (bmc_db)
+-- Baltimore Metal Crafters Database (jwashb2db)
 -- Sample Seed Data for Testing and Development
 -- ===========================================================
 
-USE bmc_db;
+USE jwashb2db;
 
 -- ===========================================================
 -- 1. CUSTOMERS

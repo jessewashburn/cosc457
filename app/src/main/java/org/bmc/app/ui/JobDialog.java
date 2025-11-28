@@ -16,7 +16,7 @@ import java.util.List;
  * Modal dialog for creating new jobs or editing existing job records.
  * Provides form validation, customer selection, and database persistence through JobDAO.
  * 
- * @author Baltimore Metal Crafters Team
+ * @author BMC Systems Team
  */
 public class JobDialog extends JDialog {
     

@@ -17,7 +17,7 @@ import java.util.List;
  * Modal dialog for creating new invoices or editing existing invoice records.
  * Provides form validation, job selection, and database persistence through InvoiceDAO.
  * 
- * @author Baltimore Metal Crafters Team
+ * @author BMC Systems Team
  */
 public class InvoiceDialog extends JDialog {
     

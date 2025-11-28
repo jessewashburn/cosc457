@@ -9,7 +9,7 @@ import java.awt.*;
  * Modal dialog for creating new employees or editing existing employee records.
  * Provides form validation and database persistence through EmployeeDAO.
  * 
- * @author Baltimore Metal Crafters Team
+ * @author BMC Systems Team
  */
 public class EmployeeDialog extends JDialog {
     

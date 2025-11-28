@@ -9,7 +9,7 @@ import java.awt.*;
  * Modal dialog for creating new customers or editing existing customer records.
  * Provides form validation and database persistence through CustomerDAO.
  * 
- * @author Baltimore Metal Crafters Team
+ * @author BMC Systems Team
  */
 public class CustomerDialog extends JDialog {
     
