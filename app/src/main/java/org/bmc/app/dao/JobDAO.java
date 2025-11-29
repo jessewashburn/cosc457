@@ -29,13 +29,25 @@ public class JobDAO {
     
     private static final String SELECT_BY_ID_SQL = 
         "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
-        "c.name as customer_name FROM Job j " +
-        "LEFT JOIN Customer c ON j.customer_id = c.customer_id WHERE j.job_id = ?";
+        "c.name as customer_name, " +
+        "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) as estimated_value " +
+        "FROM Job j " +
+        "LEFT JOIN Customer c ON j.customer_id = c.customer_id " +
+        "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
+        "LEFT JOIN Material m ON jm.material_id = m.material_id " +
+        "WHERE j.job_id = ? " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name";
     
     private static final String SELECT_ALL_SQL = 
         "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
-        "c.name as customer_name FROM Job j " +
-        "LEFT JOIN Customer c ON j.customer_id = c.customer_id ORDER BY j.due_date, j.job_id";
+        "c.name as customer_name, " +
+        "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) as estimated_value " +
+        "FROM Job j " +
+        "LEFT JOIN Customer c ON j.customer_id = c.customer_id " +
+        "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
+        "LEFT JOIN Material m ON jm.material_id = m.material_id " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "ORDER BY j.due_date, j.job_id";
     
     private static final String UPDATE_SQL = 
         "UPDATE Job SET customer_id = ?, quote_id = ?, description = ?, start_date = ?, due_date = ?, status = ? " +
@@ -46,26 +58,51 @@ public class JobDAO {
     
     private static final String SELECT_BY_STATUS_SQL = 
         "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
-        "c.name as customer_name FROM Job j " +
-        "LEFT JOIN Customer c ON j.customer_id = c.customer_id WHERE j.status = ? ORDER BY j.due_date";
+        "c.name as customer_name, " +
+        "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) as estimated_value " +
+        "FROM Job j " +
+        "LEFT JOIN Customer c ON j.customer_id = c.customer_id " +
+        "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
+        "LEFT JOIN Material m ON jm.material_id = m.material_id " +
+        "WHERE j.status = ? " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "ORDER BY j.due_date";
     
     private static final String SELECT_BY_CUSTOMER_SQL = 
         "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
-        "c.name as customer_name FROM Job j " +
-        "LEFT JOIN Customer c ON j.customer_id = c.customer_id WHERE j.customer_id = ? ORDER BY j.start_date DESC";
+        "c.name as customer_name, " +
+        "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) as estimated_value " +
+        "FROM Job j " +
+        "LEFT JOIN Customer c ON j.customer_id = c.customer_id " +
+        "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
+        "LEFT JOIN Material m ON jm.material_id = m.material_id " +
+        "WHERE j.customer_id = ? " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "ORDER BY j.start_date DESC";
     
     private static final String SELECT_DUE_SOON_SQL = 
         "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
-        "c.name as customer_name FROM Job j " +
+        "c.name as customer_name, " +
+        "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) as estimated_value " +
+        "FROM Job j " +
         "LEFT JOIN Customer c ON j.customer_id = c.customer_id " +
+        "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
+        "LEFT JOIN Material m ON jm.material_id = m.material_id " +
         "WHERE j.status IN ('Planned', 'InProgress') AND j.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY) " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
         "ORDER BY j.due_date";
     
     private static final String SELECT_OVERDUE_SQL = 
         "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
-        "c.name as customer_name FROM Job j " +
+        "c.name as customer_name, " +
+        "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) as estimated_value " +
+        "FROM Job j " +
         "LEFT JOIN Customer c ON j.customer_id = c.customer_id " +
-        "WHERE j.status IN ('Planned', 'InProgress') AND j.due_date < CURDATE() ORDER BY j.due_date";
+        "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
+        "LEFT JOIN Material m ON jm.material_id = m.material_id " +
+        "WHERE j.status IN ('Planned', 'InProgress') AND j.due_date < CURDATE() " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "ORDER BY j.due_date";
     
     private static final String COUNT_RELATED_RECORDS_SQL = 
         "SELECT " +
@@ -498,6 +535,9 @@ public class JobDAO {
         
         // Set additional display fields if available
         job.setCustomerName(rs.getString("customer_name"));
+        
+        // Set estimated value from materials calculation
+        job.setEstimatedValue(rs.getBigDecimal("estimated_value"));
         
         return job;
     }
