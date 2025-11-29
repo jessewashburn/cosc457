@@ -19,6 +19,7 @@ public class MainFrame extends JFrame {
     private JobPanel jobPanel;
     private InvoicePanel invoicePanel;
     private MaterialPanel materialPanel;
+    private PurchaseOrderPanel purchaseOrderPanel;
     private ReportsPanel reportsPanel;
     
     public MainFrame() {
@@ -122,6 +123,7 @@ public class MainFrame extends JFrame {
         jobPanel = new JobPanel();
         invoicePanel = new InvoicePanel();
         materialPanel = new MaterialPanel();
+        purchaseOrderPanel = new PurchaseOrderPanel();
         reportsPanel = new ReportsPanel();
         
         // Add tabs with mnemonics
@@ -140,8 +142,11 @@ public class MainFrame extends JFrame {
         tabbedPane.addTab("Materials", null, materialPanel, "Manage materials and inventory");
         tabbedPane.setMnemonicAt(4, java.awt.event.KeyEvent.VK_M);
         
+        tabbedPane.addTab("Purchase Orders", null, purchaseOrderPanel, "Manage purchase orders");
+        tabbedPane.setMnemonicAt(5, java.awt.event.KeyEvent.VK_P);
+        
         tabbedPane.addTab("Reports", null, reportsPanel, "View reports and analytics");
-        tabbedPane.setMnemonicAt(5, java.awt.event.KeyEvent.VK_R);
+        tabbedPane.setMnemonicAt(6, java.awt.event.KeyEvent.VK_R);
         
         add(tabbedPane, BorderLayout.CENTER);
         
@@ -190,6 +195,7 @@ public class MainFrame extends JFrame {
         employeePanel.refreshData();
         jobPanel.refreshData();
         invoicePanel.refreshData();
+        purchaseOrderPanel.refreshData();
         
         JOptionPane.showMessageDialog(
             this,
@@ -206,6 +212,7 @@ public class MainFrame extends JFrame {
             case 1 -> employeePanel.refreshData();
             case 2 -> jobPanel.refreshData();
             case 3 -> invoicePanel.refreshData();
+            case 5 -> purchaseOrderPanel.refreshData();
         }
     }
     
