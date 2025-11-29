@@ -23,7 +23,7 @@ public class JobPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JComboBox<String> statusFilter;
     private JTextField customerFilter;
-    private JButton addButton, editButton, deleteButton, refreshButton, manageMaterialsButton;
+    private JButton addButton, editButton, deleteButton, refreshButton, manageMaterialsButton, viewPhotosButton;
     
     public JobPanel() {
         this.jobDAO = new JobDAO();
@@ -92,6 +92,11 @@ public class JobPanel extends JPanel {
         manageMaterialsButton.setEnabled(false);
         toolbar.add(manageMaterialsButton);
         
+        viewPhotosButton = new JButton("View Photos");
+        viewPhotosButton.addActionListener(e -> viewPhotos());
+        viewPhotosButton.setEnabled(false);
+        toolbar.add(viewPhotosButton);
+        
         refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> refreshData());
         toolbar.add(refreshButton);
@@ -116,6 +121,7 @@ public class JobPanel extends JPanel {
                 editButton.setEnabled(hasSelection);
                 deleteButton.setEnabled(hasSelection);
                 manageMaterialsButton.setEnabled(hasSelection);
+                viewPhotosButton.setEnabled(hasSelection);
             }
         });
         
@@ -294,6 +300,20 @@ public class JobPanel extends JPanel {
             (Frame) SwingUtilities.getWindowAncestor(this), 
             jobId, 
             description
+        );
+        dialog.setVisible(true);
+    }
+    
+    private void viewPhotos() {
+        int selectedRow = jobTable.getSelectedRow();
+        if (selectedRow == -1) return;
+        
+        Integer jobId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        
+        // Show photo gallery dialog
+        PhotoGalleryDialog dialog = new PhotoGalleryDialog(
+            (Frame) SwingUtilities.getWindowAncestor(this), 
+            jobId
         );
         dialog.setVisible(true);
     }
