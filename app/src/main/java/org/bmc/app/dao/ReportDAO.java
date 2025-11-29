@@ -773,6 +773,92 @@ public class ReportDAO {
             e.printStackTrace();
         }
         
+        
         return comparisons;
     }
+    
+    /**
+     * Represents a repeat customer with multiple completed jobs
+     */
+    public static class RepeatCustomerReport {
+        private int customerId;
+        private String customerName;
+        private int completedJobCount;
+        private BigDecimal totalRevenue;
+        private LocalDate firstJobDate;
+        private LocalDate lastJobDate;
+        
+        public RepeatCustomerReport(int customerId, String customerName, int completedJobCount,
+                                   BigDecimal totalRevenue, LocalDate firstJobDate, LocalDate lastJobDate) {
+            this.customerId = customerId;
+            this.customerName = customerName;
+            this.completedJobCount = completedJobCount;
+            this.totalRevenue = totalRevenue;
+            this.firstJobDate = firstJobDate;
+            this.lastJobDate = lastJobDate;
+        }
+        
+        public int getCustomerId() { return customerId; }
+        public String getCustomerName() { return customerName; }
+        public int getCompletedJobCount() { return completedJobCount; }
+        public BigDecimal getTotalRevenue() { return totalRevenue; }
+        public LocalDate getFirstJobDate() { return firstJobDate; }
+        public LocalDate getLastJobDate() { return lastJobDate; }
+    }
+    
+    /**
+     * Get repeat customers with more than 3 completed jobs.
+     * Includes job count, total revenue, and date range.
+     */
+    public List<RepeatCustomerReport> getRepeatCustomers() {
+        List<RepeatCustomerReport> repeatCustomers = new ArrayList<>();
+        
+        String sql = 
+            "SELECT " +
+            "    c.customer_id, " +
+            "    c.name AS customer_name, " +
+            "    COUNT(j.job_id) AS completed_job_count, " +
+            "    COALESCE(SUM(i.total_amount), 0) AS total_revenue, " +
+            "    MIN(j.start_date) AS first_job_date, " +
+            "    MAX(j.start_date) AS last_job_date " +
+            "FROM Customer c " +
+            "INNER JOIN Job j ON c.customer_id = j.customer_id " +
+            "LEFT JOIN Invoice i ON j.job_id = i.job_id " +
+            "WHERE j.status = 'Completed' " +
+            "GROUP BY c.customer_id, c.name " +
+            "HAVING COUNT(j.job_id) > 3 " +
+            "ORDER BY completed_job_count DESC, total_revenue DESC";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                int customerId = rs.getInt("customer_id");
+                String customerName = rs.getString("customer_name");
+                int jobCount = rs.getInt("completed_job_count");
+                BigDecimal revenue = rs.getBigDecimal("total_revenue");
+                Date firstDate = rs.getDate("first_job_date");
+                Date lastDate = rs.getDate("last_job_date");
+                
+                repeatCustomers.add(new RepeatCustomerReport(
+                    customerId, 
+                    customerName, 
+                    jobCount, 
+                    revenue,
+                    firstDate != null ? firstDate.toLocalDate() : null,
+                    lastDate != null ? lastDate.toLocalDate() : null
+                ));
+            }
+            
+            logger.info("Found " + repeatCustomers.size() + " repeat customers with >3 completed jobs");
+            
+        } catch (SQLException e) {
+            logger.severe("Error generating repeat customer report: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return repeatCustomers;
+    }
 }
+

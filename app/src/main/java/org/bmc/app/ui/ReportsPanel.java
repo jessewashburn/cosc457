@@ -8,6 +8,7 @@ import org.bmc.app.dao.ReportDAO.EmployeeLaborReport;
 import org.bmc.app.dao.ReportDAO.UnpaidInvoiceReport;
 import org.bmc.app.dao.ReportDAO.VendorSpendingReport;
 import org.bmc.app.dao.ReportDAO.JobCostComparisonReport;
+import org.bmc.app.dao.ReportDAO.RepeatCustomerReport;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -58,6 +59,10 @@ public class ReportsPanel extends JPanel {
     private JTable jobCostComparisonTable;
     private DefaultTableModel jobCostComparisonTableModel;
     
+    // Repeat Customer Report Components
+    private JTable repeatCustomerTable;
+    private DefaultTableModel repeatCustomerTableModel;
+    
     public ReportsPanel() {
         this.reportDAO = new ReportDAO();
         setLayout(new BorderLayout(10, 10));
@@ -79,6 +84,7 @@ public class ReportsPanel extends JPanel {
         reportTabs.addTab("Unpaid Invoices (30+ Days)", createUnpaidInvoicesPanel());
         reportTabs.addTab("Vendor Spending by Month", createVendorSpendingPanel());
         reportTabs.addTab("Job Cost Comparison", createJobCostComparisonPanel());
+        reportTabs.addTab("Repeat Customers", createRepeatCustomersPanel());
         
         add(reportTabs, BorderLayout.CENTER);
     }
@@ -724,6 +730,87 @@ public class ReportsPanel extends JPanel {
     }
     
     /**
+     * Create the Repeat Customers report panel
+     */
+    private JPanel createRepeatCustomersPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("Repeat Customers (>3 Completed Jobs)");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> loadRepeatCustomersReport());
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Table
+        String[] columns = {"Customer ID", "Customer Name", "Completed Jobs", 
+                           "Total Revenue", "First Job Date", "Last Job Date"};
+        repeatCustomerTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        repeatCustomerTable = new JTable(repeatCustomerTableModel);
+        repeatCustomerTable.setAutoCreateRowSorter(true);
+        repeatCustomerTable.setRowHeight(25);
+        
+        // Set column widths
+        repeatCustomerTable.getColumnModel().getColumn(0).setPreferredWidth(100);  // Customer ID
+        repeatCustomerTable.getColumnModel().getColumn(1).setPreferredWidth(200);  // Customer Name
+        repeatCustomerTable.getColumnModel().getColumn(2).setPreferredWidth(120);  // Completed Jobs
+        repeatCustomerTable.getColumnModel().getColumn(3).setPreferredWidth(120);  // Total Revenue
+        repeatCustomerTable.getColumnModel().getColumn(4).setPreferredWidth(120);  // First Job Date
+        repeatCustomerTable.getColumnModel().getColumn(5).setPreferredWidth(120);  // Last Job Date
+        
+        JScrollPane scrollPane = new JScrollPane(repeatCustomerTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Info footer
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel infoLabel = new JLabel("Shows customers with more than 3 completed jobs - valuable repeat clients.");
+        infoLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        infoLabel.setForeground(Color.GRAY);
+        footerPanel.add(infoLabel);
+        panel.add(footerPanel, BorderLayout.SOUTH);
+        
+        // Load initial data
+        loadRepeatCustomersReport();
+        
+        return panel;
+    }
+    
+    /**
+     * Load repeat customers report from database
+     */
+    private void loadRepeatCustomersReport() {
+        repeatCustomerTableModel.setRowCount(0); // Clear existing rows
+        
+        List<RepeatCustomerReport> repeatCustomers = reportDAO.getRepeatCustomers();
+        
+        for (RepeatCustomerReport customer : repeatCustomers) {
+            Object[] row = {
+                customer.getCustomerId(),
+                customer.getCustomerName(),
+                customer.getCompletedJobCount(),
+                CURRENCY_FORMATTER.format(customer.getTotalRevenue()),
+                customer.getFirstJobDate() != null ? customer.getFirstJobDate().format(DATE_FORMATTER) : "N/A",
+                customer.getLastJobDate() != null ? customer.getLastJobDate().format(DATE_FORMATTER) : "N/A"
+            };
+            repeatCustomerTableModel.addRow(row);
+        }
+        
+        logger.info("Loaded " + repeatCustomers.size() + " repeat customers into table");
+    }
+    
+    /**
      * Refresh all reports
      */
     public void refreshReports() {
@@ -734,6 +821,7 @@ public class ReportsPanel extends JPanel {
         loadUnpaidInvoicesReport();
         loadVendorSpendingReport();
         loadJobCostComparisonReport();
+        loadRepeatCustomersReport();
         logger.info("All reports refreshed");
     }
 }
