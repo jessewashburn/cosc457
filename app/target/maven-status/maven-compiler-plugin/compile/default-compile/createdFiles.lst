@@ -18,6 +18,7 @@ org\bmc\app\ui\JobDialog.class
 org\bmc\app\dao\MaterialDAO.class
 org\bmc\app\ui\MaterialPanel.class
 org\bmc\app\model\Job.class
+org\bmc\app\dao\ReportDAO$TopCustomerReport.class
 org\bmc\app\model\Customer.class
 org\bmc\app\dao\ReportDAO$JobDueSoonReport.class
 org\bmc\app\ui\InvoicePanel$1.class
@@ -32,6 +33,7 @@ org\bmc\app\ui\MaterialPanel$2.class
 org\bmc\app\ui\EmployeePanel$1.class
 org\bmc\app\ui\EmployeeDialog.class
 org\bmc\app\util\DBConnection.class
+org\bmc\app\ui\ReportsPanel$2.class
 org\bmc\app\model\Job$Status.class
 org\bmc\app\ui\JobPanel.class
 org\bmc\app\ui\EmployeePanel.class
