@@ -8,8 +8,10 @@ C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\dao\MaterialDAO.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\model\Customer.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\dao\EmployeeDAO.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\CustomerDialog.java
+C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\JobMaterialDialog.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\Main.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\EmployeePanel.java
+C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\dao\JobMaterialDAO.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\test\DatabaseConnectionTest.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\JobPanel.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\MaterialPanel.java

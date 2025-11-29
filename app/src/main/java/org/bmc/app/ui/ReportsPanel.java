@@ -2,6 +2,7 @@ package org.bmc.app.ui;
 
 import org.bmc.app.dao.ReportDAO;
 import org.bmc.app.dao.ReportDAO.JobDueSoonReport;
+import org.bmc.app.dao.ReportDAO.MaterialShortageReport;
 import org.bmc.app.dao.ReportDAO.TopCustomerReport;
 
 import javax.swing.*;
@@ -32,6 +33,10 @@ public class ReportsPanel extends JPanel {
     private JTable topCustomersTable;
     private DefaultTableModel topCustomersTableModel;
     
+    // Material Shortages Report Components
+    private JTable materialShortagesTable;
+    private DefaultTableModel materialShortagesTableModel;
+    
     public ReportsPanel() {
         this.reportDAO = new ReportDAO();
         setLayout(new BorderLayout(10, 10));
@@ -48,6 +53,7 @@ public class ReportsPanel extends JPanel {
         // Add each report as a separate tab
         reportTabs.addTab("Jobs Due Soon", createJobsDueSoonPanel());
         reportTabs.addTab("Top Customers", createTopCustomersPanel());
+        reportTabs.addTab("Material Shortages", createMaterialShortagesPanel());
         
         add(reportTabs, BorderLayout.CENTER);
     }
@@ -231,11 +237,94 @@ public class ReportsPanel extends JPanel {
     }
     
     /**
+     * Create the Material Shortages report panel
+     */
+    private JPanel createMaterialShortagesPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("Material Shortages Across Active Jobs");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> loadMaterialShortagesReport());
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Table
+        String[] columns = {"Material ID", "Material Name", "Category", "In Stock", "Required", "Shortage", "Jobs Affected"};
+        materialShortagesTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        materialShortagesTable = new JTable(materialShortagesTableModel);
+        materialShortagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        materialShortagesTable.getTableHeader().setReorderingAllowed(false);
+        
+        // Set column widths
+        materialShortagesTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Material ID
+        materialShortagesTable.getColumnModel().getColumn(1).setPreferredWidth(200); // Material Name
+        materialShortagesTable.getColumnModel().getColumn(2).setPreferredWidth(120); // Category
+        materialShortagesTable.getColumnModel().getColumn(3).setPreferredWidth(80);  // In Stock
+        materialShortagesTable.getColumnModel().getColumn(4).setPreferredWidth(80);  // Required
+        materialShortagesTable.getColumnModel().getColumn(5).setPreferredWidth(80);  // Shortage
+        materialShortagesTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Jobs Affected
+        
+        JScrollPane scrollPane = new JScrollPane(materialShortagesTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Info footer
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel infoLabel = new JLabel("Shows materials where stock is insufficient for active (Planned/InProgress) jobs");
+        infoLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        infoLabel.setForeground(Color.GRAY);
+        footerPanel.add(infoLabel);
+        panel.add(footerPanel, BorderLayout.SOUTH);
+        
+        // Load initial data
+        loadMaterialShortagesReport();
+        
+        return panel;
+    }
+    
+    /**
+     * Load material shortages from database
+     */
+    private void loadMaterialShortagesReport() {
+        materialShortagesTableModel.setRowCount(0); // Clear existing rows
+        
+        List<MaterialShortageReport> shortages = reportDAO.getMaterialShortages();
+        
+        for (MaterialShortageReport shortage : shortages) {
+            Object[] row = {
+                shortage.getMaterialId(),
+                shortage.getMaterialName(),
+                shortage.getCategory() != null ? shortage.getCategory() : "",
+                shortage.getStockQuantity(),
+                shortage.getTotalRequired(),
+                shortage.getShortageAmount(),
+                shortage.getActiveJobsAffected()
+            };
+            materialShortagesTableModel.addRow(row);
+        }
+        
+        logger.info("Loaded " + shortages.size() + " material shortages into table");
+    }
+    
+    /**
      * Refresh all reports
      */
     public void refreshReports() {
         loadJobsDueSoonReport();
         loadTopCustomersReport();
+        loadMaterialShortagesReport();
         logger.info("All reports refreshed");
     }
 }

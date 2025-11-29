@@ -161,4 +161,84 @@ public class ReportDAO {
         
         return customers;
     }
+    
+    /**
+     * Represents material shortage information
+     */
+    public static class MaterialShortageReport {
+        private int materialId;
+        private String materialName;
+        private String category;
+        private int stockQuantity;
+        private int totalRequired;
+        private int shortageAmount;
+        private int activeJobsAffected;
+        
+        public MaterialShortageReport(int materialId, String materialName, String category,
+                                     int stockQuantity, int totalRequired, int shortageAmount,
+                                     int activeJobsAffected) {
+            this.materialId = materialId;
+            this.materialName = materialName;
+            this.category = category;
+            this.stockQuantity = stockQuantity;
+            this.totalRequired = totalRequired;
+            this.shortageAmount = shortageAmount;
+            this.activeJobsAffected = activeJobsAffected;
+        }
+        
+        public int getMaterialId() { return materialId; }
+        public String getMaterialName() { return materialName; }
+        public String getCategory() { return category; }
+        public int getStockQuantity() { return stockQuantity; }
+        public int getTotalRequired() { return totalRequired; }
+        public int getShortageAmount() { return shortageAmount; }
+        public int getActiveJobsAffected() { return activeJobsAffected; }
+    }
+    
+    /**
+     * Get materials with shortages across active jobs
+     * Returns materials where total quantity needed for active jobs exceeds current stock
+     */
+    public List<MaterialShortageReport> getMaterialShortages() {
+        List<MaterialShortageReport> shortages = new ArrayList<>();
+        
+        String sql = "SELECT m.material_id, m.name, m.category, m.stock_quantity, " +
+                     "COALESCE(SUM(jm.quantity_used), 0) AS total_required, " +
+                     "COUNT(DISTINCT j.job_id) AS active_jobs_affected, " +
+                     "(COALESCE(SUM(jm.quantity_used), 0) - m.stock_quantity) AS shortage_amount " +
+                     "FROM Material m " +
+                     "INNER JOIN JobMaterial jm ON m.material_id = jm.material_id " +
+                     "INNER JOIN Job j ON jm.job_id = j.job_id " +
+                     "WHERE j.status IN ('Planned', 'InProgress') " +
+                     "GROUP BY m.material_id, m.name, m.category, m.stock_quantity " +
+                     "HAVING shortage_amount > 0 " +
+                     "ORDER BY shortage_amount DESC, m.name ASC";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                int materialId = rs.getInt("material_id");
+                String materialName = rs.getString("name");
+                String category = rs.getString("category");
+                int stockQuantity = rs.getInt("stock_quantity");
+                int totalRequired = rs.getInt("total_required");
+                int activeJobsAffected = rs.getInt("active_jobs_affected");
+                int shortageAmount = rs.getInt("shortage_amount");
+                
+                shortages.add(new MaterialShortageReport(materialId, materialName, category,
+                                                         stockQuantity, totalRequired, 
+                                                         shortageAmount, activeJobsAffected));
+            }
+            
+            logger.info("Found " + shortages.size() + " materials with shortages");
+            
+        } catch (SQLException e) {
+            logger.severe("Error fetching material shortages: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return shortages;
+    }
 }

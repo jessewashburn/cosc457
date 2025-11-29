@@ -1,6 +1,8 @@
 package org.bmc.app.ui;
 
 import org.bmc.app.dao.JobDAO;
+import org.bmc.app.dao.JobMaterialDAO;
+import org.bmc.app.dao.JobMaterialDAO.JobMaterialInfo;
 import org.bmc.app.model.Job;
 
 import javax.swing.*;
@@ -16,14 +18,16 @@ public class JobPanel extends JPanel {
     private static final Logger logger = Logger.getLogger(JobPanel.class.getName());
     
     private JobDAO jobDAO;
+    private JobMaterialDAO jobMaterialDAO;
     private JTable jobTable;
     private DefaultTableModel tableModel;
     private JComboBox<String> statusFilter;
     private JTextField customerFilter;
-    private JButton addButton, editButton, deleteButton, refreshButton;
+    private JButton addButton, editButton, deleteButton, refreshButton, manageMaterialsButton;
     
     public JobPanel() {
         this.jobDAO = new JobDAO();
+        this.jobMaterialDAO = new JobMaterialDAO();
         initializePanel();
         loadJobData();
     }
@@ -83,6 +87,11 @@ public class JobPanel extends JPanel {
         deleteButton.setEnabled(false);
         toolbar.add(deleteButton);
         
+        manageMaterialsButton = new JButton("Manage Materials");
+        manageMaterialsButton.addActionListener(e -> manageMaterials());
+        manageMaterialsButton.setEnabled(false);
+        toolbar.add(manageMaterialsButton);
+        
         refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> refreshData());
         toolbar.add(refreshButton);
@@ -106,6 +115,7 @@ public class JobPanel extends JPanel {
                 boolean hasSelection = jobTable.getSelectedRow() != -1;
                 editButton.setEnabled(hasSelection);
                 deleteButton.setEnabled(hasSelection);
+                manageMaterialsButton.setEnabled(hasSelection);
             }
         });
         
@@ -272,9 +282,220 @@ public class JobPanel extends JPanel {
         }
     }
     
+    private void manageMaterials() {
+        int selectedRow = jobTable.getSelectedRow();
+        if (selectedRow == -1) return;
+        
+        Integer jobId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        String description = (String) tableModel.getValueAt(selectedRow, 2);
+        
+        // Show materials management dialog
+        JobMaterialsDialog dialog = new JobMaterialsDialog(
+            (Frame) SwingUtilities.getWindowAncestor(this), 
+            jobId, 
+            description
+        );
+        dialog.setVisible(true);
+    }
+    
     public void refreshData() {
         loadJobData();
         statusFilter.setSelectedIndex(0); // Reset to "All"
         customerFilter.setText(""); // Clear customer filter
+    }
+    
+    /**
+     * Dialog for managing materials assigned to a job
+     */
+    private class JobMaterialsDialog extends JDialog {
+        private int jobId;
+        private JTable materialsTable;
+        private DefaultTableModel materialsTableModel;
+        private JButton assignButton, updateButton, removeButton, closeButton;
+        
+        public JobMaterialsDialog(Frame parent, int jobId, String jobDescription) {
+            super(parent, "Manage Materials for Job: " + jobDescription, true);
+            this.jobId = jobId;
+            
+            initializeDialog();
+            loadMaterials();
+            
+            setSize(700, 400);
+            setLocationRelativeTo(parent);
+        }
+        
+        private void initializeDialog() {
+            setLayout(new BorderLayout(10, 10));
+            
+            // Header
+            JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
+            JLabel titleLabel = new JLabel("Materials Assigned to This Job");
+            titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+            headerPanel.add(titleLabel);
+            add(headerPanel, BorderLayout.NORTH);
+            
+            // Table
+            String[] columns = {"Material ID", "Material Name", "Category", "Quantity Used", "Stock Available"};
+            materialsTableModel = new DefaultTableModel(columns, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+            
+            materialsTable = new JTable(materialsTableModel);
+            materialsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            materialsTable.getSelectionModel().addListSelectionListener(e -> {
+                if (!e.getValueIsAdjusting()) {
+                    boolean hasSelection = materialsTable.getSelectedRow() != -1;
+                    updateButton.setEnabled(hasSelection);
+                    removeButton.setEnabled(hasSelection);
+                }
+            });
+            
+            JScrollPane scrollPane = new JScrollPane(materialsTable);
+            scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+            add(scrollPane, BorderLayout.CENTER);
+            
+            // Button panel
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+            
+            assignButton = new JButton("Assign Material");
+            assignButton.addActionListener(e -> assignMaterial());
+            buttonPanel.add(assignButton);
+            
+            updateButton = new JButton("Update Quantity");
+            updateButton.addActionListener(e -> updateQuantity());
+            updateButton.setEnabled(false);
+            buttonPanel.add(updateButton);
+            
+            removeButton = new JButton("Remove Material");
+            removeButton.addActionListener(e -> removeMaterial());
+            removeButton.setEnabled(false);
+            buttonPanel.add(removeButton);
+            
+            closeButton = new JButton("Close");
+            closeButton.addActionListener(e -> dispose());
+            buttonPanel.add(closeButton);
+            
+            add(buttonPanel, BorderLayout.SOUTH);
+        }
+        
+        private void loadMaterials() {
+            materialsTableModel.setRowCount(0);
+            List<JobMaterialInfo> materials = jobMaterialDAO.findByJobId(jobId);
+            
+            for (JobMaterialInfo mat : materials) {
+                Object[] row = {
+                    mat.getMaterialId(),
+                    mat.getMaterialName(),
+                    mat.getCategory() != null ? mat.getCategory() : "",
+                    mat.getQuantityUsed(),
+                    mat.getStockQuantity()
+                };
+                materialsTableModel.addRow(row);
+            }
+        }
+        
+        private void assignMaterial() {
+            JobMaterialDialog dialog = new JobMaterialDialog(
+                (Frame) SwingUtilities.getWindowAncestor(this),
+                "Assign Material to Job",
+                null,
+                null
+            );
+            dialog.setVisible(true);
+            
+            if (dialog.isConfirmed()) {
+                boolean success = jobMaterialDAO.assignMaterial(
+                    jobId, 
+                    dialog.getSelectedMaterialId(), 
+                    dialog.getQuantity()
+                );
+                
+                if (success) {
+                    loadMaterials();
+                    JOptionPane.showMessageDialog(this,
+                        "Material assigned successfully.",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Failed to assign material. Material may already be assigned to this job.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+        
+        private void updateQuantity() {
+            int selectedRow = materialsTable.getSelectedRow();
+            if (selectedRow == -1) return;
+            
+            int materialId = (Integer) materialsTableModel.getValueAt(selectedRow, 0);
+            int currentQuantity = (Integer) materialsTableModel.getValueAt(selectedRow, 3);
+            
+            JobMaterialDialog dialog = new JobMaterialDialog(
+                (Frame) SwingUtilities.getWindowAncestor(this),
+                "Update Material Quantity",
+                materialId,
+                currentQuantity
+            );
+            dialog.setVisible(true);
+            
+            if (dialog.isConfirmed()) {
+                boolean success = jobMaterialDAO.updateQuantity(
+                    jobId, 
+                    materialId, 
+                    dialog.getQuantity()
+                );
+                
+                if (success) {
+                    loadMaterials();
+                    JOptionPane.showMessageDialog(this,
+                        "Quantity updated successfully.",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Failed to update quantity.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+        
+        private void removeMaterial() {
+            int selectedRow = materialsTable.getSelectedRow();
+            if (selectedRow == -1) return;
+            
+            int materialId = (Integer) materialsTableModel.getValueAt(selectedRow, 0);
+            String materialName = (String) materialsTableModel.getValueAt(selectedRow, 1);
+            
+            int choice = JOptionPane.showConfirmDialog(this,
+                "Remove " + materialName + " from this job?",
+                "Confirm Remove",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+            
+            if (choice == JOptionPane.YES_OPTION) {
+                boolean success = jobMaterialDAO.removeMaterial(jobId, materialId);
+                
+                if (success) {
+                    loadMaterials();
+                    JOptionPane.showMessageDialog(this,
+                        "Material removed successfully.",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Failed to remove material.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
     }
 }
