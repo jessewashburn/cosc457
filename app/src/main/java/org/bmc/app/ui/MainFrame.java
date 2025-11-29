@@ -19,6 +19,7 @@ public class MainFrame extends JFrame {
     private JobPanel jobPanel;
     private InvoicePanel invoicePanel;
     private MaterialPanel materialPanel;
+    private ReportsPanel reportsPanel;
     
     public MainFrame() {
         initializeFrame();
@@ -121,6 +122,7 @@ public class MainFrame extends JFrame {
         jobPanel = new JobPanel();
         invoicePanel = new InvoicePanel();
         materialPanel = new MaterialPanel();
+        reportsPanel = new ReportsPanel();
         
         // Add tabs with mnemonics
         tabbedPane.addTab("Customers", null, customerPanel, "Manage customer information");
@@ -137,6 +139,9 @@ public class MainFrame extends JFrame {
         
         tabbedPane.addTab("Materials", null, materialPanel, "Manage materials and inventory");
         tabbedPane.setMnemonicAt(4, java.awt.event.KeyEvent.VK_M);
+        
+        tabbedPane.addTab("Reports", null, reportsPanel, "View reports and analytics");
+        tabbedPane.setMnemonicAt(5, java.awt.event.KeyEvent.VK_R);
         
         add(tabbedPane, BorderLayout.CENTER);
         
