@@ -93,7 +93,7 @@ public class EmployeePanel extends JPanel {
     }
     
     private void createTable() {
-        String[] columnNames = {"ID", "Name", "Role", "Specialization", "Contact Info"};
+        String[] columnNames = {"ID", "Name", "Role", "Specialization", "Contact Info", "Hourly Rate"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -117,6 +117,7 @@ public class EmployeePanel extends JPanel {
         employeeTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Role
         employeeTable.getColumnModel().getColumn(3).setPreferredWidth(150); // Specialization
         employeeTable.getColumnModel().getColumn(4).setPreferredWidth(200); // Contact Info
+        employeeTable.getColumnModel().getColumn(5).setPreferredWidth(100); // Hourly Rate
     }
     
     private JPanel createInfoPanel() {
@@ -152,7 +153,8 @@ public class EmployeePanel extends JPanel {
                 employee.getName(),
                 employee.getRole(),
                 employee.getSpecialization(),
-                employee.getContactInfo()
+                employee.getContactInfo(),
+                employee.getHourlyRate() != null ? String.format("$%.2f", employee.getHourlyRate()) : "$0.00"
             };
             tableModel.addRow(row);
         }

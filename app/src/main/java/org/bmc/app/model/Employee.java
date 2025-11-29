@@ -48,6 +48,7 @@ public class Employee {
     private Role role;
     private String specialization;
     private String contactInfo;
+    private java.math.BigDecimal hourlyRate;
     
     /**
      * Default constructor
@@ -62,12 +63,14 @@ public class Employee {
      * @param role employee role
      * @param specialization employee specialization
      * @param contactInfo employee contact information
+     * @param hourlyRate hourly pay rate
      */
-    public Employee(String name, Role role, String specialization, String contactInfo) {
+    public Employee(String name, Role role, String specialization, String contactInfo, java.math.BigDecimal hourlyRate) {
         this.name = name;
         this.role = role;
         this.specialization = specialization;
         this.contactInfo = contactInfo;
+        this.hourlyRate = hourlyRate;
     }
     
     /**
@@ -78,13 +81,15 @@ public class Employee {
      * @param role employee role
      * @param specialization employee specialization
      * @param contactInfo employee contact information
+     * @param hourlyRate hourly pay rate
      */
-    public Employee(Integer employeeId, String name, Role role, String specialization, String contactInfo) {
+    public Employee(Integer employeeId, String name, Role role, String specialization, String contactInfo, java.math.BigDecimal hourlyRate) {
         this.employeeId = employeeId;
         this.name = name;
         this.role = role;
         this.specialization = specialization;
         this.contactInfo = contactInfo;
+        this.hourlyRate = hourlyRate;
     }
     
     // Getters and Setters
@@ -127,6 +132,14 @@ public class Employee {
     
     public void setContactInfo(String contactInfo) {
         this.contactInfo = contactInfo;
+    }
+    
+    public java.math.BigDecimal getHourlyRate() {
+        return hourlyRate;
+    }
+    
+    public void setHourlyRate(java.math.BigDecimal hourlyRate) {
+        this.hourlyRate = hourlyRate;
     }
     
     // Business Methods

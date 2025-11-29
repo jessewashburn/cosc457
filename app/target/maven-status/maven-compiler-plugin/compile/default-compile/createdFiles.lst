@@ -6,6 +6,7 @@ org\bmc\app\ui\JobDialog$CustomerItem.class
 org\bmc\app\ui\JobMaterialDialog$MaterialItem.class
 org\bmc\app\dao\EmployeeDAO.class
 org\bmc\app\ui\InvoiceDialog$JobItem.class
+org\bmc\app\ui\ReportsPanel$4.class
 org\bmc\app\ui\JobPanel$1.class
 org\bmc\app\dao\InvoiceDAO.class
 org\bmc\app\dao\JobMaterialDAO$JobMaterialInfo.class
@@ -26,6 +27,7 @@ org\bmc\app\ui\JobPanel.class
 org\bmc\app\dao\ReportDAO.class
 org\bmc\app\model\Employee$Role.class
 org\bmc\app\test\SimpleModelTest.class
+org\bmc\app\dao\ReportDAO$EmployeeLaborReport.class
 org\bmc\app\ui\MaterialPanel$1.class
 org\bmc\app\model\Employee.class
 org\bmc\app\model\Material.class

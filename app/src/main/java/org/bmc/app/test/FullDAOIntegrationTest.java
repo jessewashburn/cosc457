@@ -135,7 +135,8 @@ public class FullDAOIntegrationTest {
             
             // Test create employee
             Employee testEmployee = new Employee(null, "Test Integration Employee", 
-                Employee.Role.RESTORER, "555-EMP-TEST", "test.employee@bmc.com");
+                Employee.Role.RESTORER, "Test Specialization", "test.employee@bmc.com", 
+                new java.math.BigDecimal("75.00"));
             
             Employee created = dao.create(testEmployee);
             if (created != null && created.getEmployeeId() != null) {

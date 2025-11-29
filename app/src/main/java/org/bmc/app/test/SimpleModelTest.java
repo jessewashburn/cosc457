@@ -57,11 +57,11 @@ public class SimpleModelTest {
         
         // Create employees with different roles
         Employee restorer = new Employee(null, "John Smith", Employee.Role.RESTORER, 
-            "410-555-0001", "john.smith@bmc.com");
+            "Historic Ironwork", "john.smith@bmc.com", new java.math.BigDecimal("75.00"));
         Employee fabricator = new Employee(null, "Mary Johnson", Employee.Role.FABRICATOR, 
-            "410-555-0002", "mary.johnson@bmc.com");
+            "Welding", "mary.johnson@bmc.com", new java.math.BigDecimal("65.00"));
         Employee admin = new Employee(null, "Bob Wilson", Employee.Role.ADMIN, 
-            "410-555-0003", "bob.wilson@bmc.com");
+            "Project Management", "bob.wilson@bmc.com", new java.math.BigDecimal("85.00"));
         
         LOGGER.info(() -> String.format("Restorer: %s, Is Craftsperson: %b", 
             restorer.getDisplayName(), restorer.isCraftsperson()));
@@ -160,7 +160,7 @@ public class SimpleModelTest {
         invoice.setJobDescription(job.getDescription()); // Simulated join
         
         Employee assignedEmployee = new Employee(400, "Alice Cooper", Employee.Role.RESTORER, 
-            "410-555-7777", "alice.cooper@bmc.com");
+            "Restoration", "alice.cooper@bmc.com", new java.math.BigDecimal("75.00"));
         
         // Display relationships
         LOGGER.info(() -> String.format("Customer: %s", customer.getDisplayName()));

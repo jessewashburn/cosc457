@@ -4,6 +4,7 @@ import org.bmc.app.dao.ReportDAO;
 import org.bmc.app.dao.ReportDAO.JobDueSoonReport;
 import org.bmc.app.dao.ReportDAO.MaterialShortageReport;
 import org.bmc.app.dao.ReportDAO.TopCustomerReport;
+import org.bmc.app.dao.ReportDAO.EmployeeLaborReport;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -37,6 +38,10 @@ public class ReportsPanel extends JPanel {
     private JTable materialShortagesTable;
     private DefaultTableModel materialShortagesTableModel;
     
+    // Employee Labor Report Components
+    private JTable employeeLaborTable;
+    private DefaultTableModel employeeLaborTableModel;
+    
     public ReportsPanel() {
         this.reportDAO = new ReportDAO();
         setLayout(new BorderLayout(10, 10));
@@ -54,6 +59,7 @@ public class ReportsPanel extends JPanel {
         reportTabs.addTab("Jobs Due Soon", createJobsDueSoonPanel());
         reportTabs.addTab("Top Customers", createTopCustomersPanel());
         reportTabs.addTab("Material Shortages", createMaterialShortagesPanel());
+        reportTabs.addTab("Employee Labor", createEmployeeLaborPanel());
         
         add(reportTabs, BorderLayout.CENTER);
     }
@@ -319,12 +325,95 @@ public class ReportsPanel extends JPanel {
     }
     
     /**
+     * Create the Employee Labor Hours and Pay report panel
+     */
+    private JPanel createEmployeeLaborPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("Employee Labor Hours and Pay");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> loadEmployeeLaborReport());
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Table
+        String[] columns = {"ID", "Employee Name", "Role", "Hourly Rate", "Total Hours", "Total Pay", "Jobs Worked"};
+        employeeLaborTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        employeeLaborTable = new JTable(employeeLaborTableModel);
+        employeeLaborTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        employeeLaborTable.getTableHeader().setReorderingAllowed(false);
+        
+        // Set column widths
+        employeeLaborTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // ID
+        employeeLaborTable.getColumnModel().getColumn(1).setPreferredWidth(150); // Employee Name
+        employeeLaborTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Role
+        employeeLaborTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Hourly Rate
+        employeeLaborTable.getColumnModel().getColumn(4).setPreferredWidth(100); // Total Hours
+        employeeLaborTable.getColumnModel().getColumn(5).setPreferredWidth(100); // Total Pay
+        employeeLaborTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Jobs Worked
+        
+        JScrollPane scrollPane = new JScrollPane(employeeLaborTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Info footer
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel infoLabel = new JLabel("Shows total hours worked, calculated pay (hours × hourly rate), and number of jobs per employee");
+        infoLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        infoLabel.setForeground(Color.GRAY);
+        footerPanel.add(infoLabel);
+        panel.add(footerPanel, BorderLayout.SOUTH);
+        
+        // Load initial data
+        loadEmployeeLaborReport();
+        
+        return panel;
+    }
+    
+    /**
+     * Load employee labor report from database
+     */
+    private void loadEmployeeLaborReport() {
+        employeeLaborTableModel.setRowCount(0); // Clear existing rows
+        
+        List<EmployeeLaborReport> reports = reportDAO.getEmployeeLaborReport();
+        
+        for (EmployeeLaborReport report : reports) {
+            Object[] row = {
+                report.getEmployeeId(),
+                report.getEmployeeName(),
+                report.getRole(),
+                report.getHourlyRate() != null ? CURRENCY_FORMATTER.format(report.getHourlyRate()) : "$0.00",
+                report.getTotalHours() != null ? String.format("%.2f", report.getTotalHours()) : "0.00",
+                report.getTotalPay() != null ? CURRENCY_FORMATTER.format(report.getTotalPay()) : "$0.00",
+                report.getJobCount()
+            };
+            employeeLaborTableModel.addRow(row);
+        }
+        
+        logger.info("Loaded " + reports.size() + " employee labor reports into table");
+    }
+    
+    /**
      * Refresh all reports
      */
     public void refreshReports() {
         loadJobsDueSoonReport();
         loadTopCustomersReport();
         loadMaterialShortagesReport();
+        loadEmployeeLaborReport();
         logger.info("All reports refreshed");
     }
 }

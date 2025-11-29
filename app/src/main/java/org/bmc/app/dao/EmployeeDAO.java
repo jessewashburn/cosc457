@@ -23,35 +23,35 @@ public class EmployeeDAO {
     
     // SQL Queries
     private static final String INSERT_SQL = 
-        "INSERT INTO Employee (name, role, specialization, contact_info) VALUES (?, ?, ?, ?)";
+        "INSERT INTO Employee (name, role, specialization, contact_info, hourly_rate) VALUES (?, ?, ?, ?, ?)";
     
     private static final String SELECT_BY_ID_SQL = 
-        "SELECT employee_id, name, role, specialization, contact_info FROM Employee WHERE employee_id = ?";
+        "SELECT employee_id, name, role, specialization, contact_info, hourly_rate FROM Employee WHERE employee_id = ?";
     
     private static final String SELECT_ALL_SQL = 
-        "SELECT employee_id, name, role, specialization, contact_info FROM Employee ORDER BY name";
+        "SELECT employee_id, name, role, specialization, contact_info, hourly_rate FROM Employee ORDER BY name";
     
     private static final String UPDATE_SQL = 
-        "UPDATE Employee SET name = ?, role = ?, specialization = ?, contact_info = ? WHERE employee_id = ?";
+        "UPDATE Employee SET name = ?, role = ?, specialization = ?, contact_info = ?, hourly_rate = ? WHERE employee_id = ?";
     
     private static final String DELETE_SQL = 
         "DELETE FROM Employee WHERE employee_id = ?";
     
     private static final String SELECT_BY_ROLE_SQL = 
-        "SELECT employee_id, name, role, specialization, contact_info FROM Employee WHERE role = ? ORDER BY name";
+        "SELECT employee_id, name, role, specialization, contact_info, hourly_rate FROM Employee WHERE role = ? ORDER BY name";
     
     private static final String SEARCH_BY_NAME_SQL = 
-        "SELECT employee_id, name, role, specialization, contact_info FROM Employee " +
+        "SELECT employee_id, name, role, specialization, contact_info, hourly_rate FROM Employee " +
         "WHERE name LIKE ? ORDER BY name";
     
     private static final String COUNT_WORKLOGS_SQL = 
         "SELECT COUNT(*) FROM WorkLog WHERE employee_id = ?";
     
     private static final String SELECT_WORKLOAD_SQL = 
-        "SELECT e.employee_id, e.name, e.role, e.specialization, e.contact_info, " +
+        "SELECT e.employee_id, e.name, e.role, e.specialization, e.contact_info, e.hourly_rate, " +
         "COALESCE(SUM(w.hours_worked), 0) as total_hours " +
         "FROM Employee e LEFT JOIN WorkLog w ON e.employee_id = w.employee_id " +
-        "GROUP BY e.employee_id, e.name, e.role, e.specialization, e.contact_info " +
+        "GROUP BY e.employee_id, e.name, e.role, e.specialization, e.contact_info, e.hourly_rate " +
         "ORDER BY total_hours DESC";
     
     /**
@@ -78,6 +78,7 @@ public class EmployeeDAO {
             pstmt.setString(2, employee.getRole().getValue());
             pstmt.setString(3, employee.getSpecialization());
             pstmt.setString(4, employee.getContactInfo());
+            pstmt.setBigDecimal(5, employee.getHourlyRate());
             
             int rowsAffected = pstmt.executeUpdate();
             
@@ -189,7 +190,8 @@ public class EmployeeDAO {
             pstmt.setString(2, employee.getRole().getValue());
             pstmt.setString(3, employee.getSpecialization());
             pstmt.setString(4, employee.getContactInfo());
-            pstmt.setInt(5, employee.getEmployeeId());
+            pstmt.setBigDecimal(5, employee.getHourlyRate());
+            pstmt.setInt(6, employee.getEmployeeId());
             
             int rowsAffected = pstmt.executeUpdate();
             
@@ -419,7 +421,8 @@ public class EmployeeDAO {
             rs.getString("name"),
             role,
             rs.getString("specialization"),
-            rs.getString("contact_info")
+            rs.getString("contact_info"),
+            rs.getBigDecimal("hourly_rate")
         );
     }
     

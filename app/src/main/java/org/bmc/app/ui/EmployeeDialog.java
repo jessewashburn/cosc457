@@ -23,6 +23,7 @@ public class EmployeeDialog extends JDialog {
     private JComboBox<Employee.Role> roleCombo;
     private JTextField specializationField;
     private JTextField contactInfoField;
+    private JTextField hourlyRateField;
     
     public EmployeeDialog(Frame parent, Employee employee) {
         super(parent, employee == null ? "Add Employee" : "Edit Employee", true);
@@ -46,6 +47,8 @@ public class EmployeeDialog extends JDialog {
         roleCombo = new JComboBox<>(Employee.Role.values());
         specializationField = new JTextField(TEXT_FIELD_COLS);
         contactInfoField = new JTextField(TEXT_FIELD_COLS);
+        hourlyRateField = new JTextField(TEXT_FIELD_COLS);
+        hourlyRateField.setText("0.00");
     }
     
     private void layoutComponents() {
@@ -66,6 +69,7 @@ public class EmployeeDialog extends JDialog {
         addFormRow(panel, gbc, 1, "Role:", roleCombo);
         addFormRow(panel, gbc, 2, "Specialization:", specializationField);
         addFormRow(panel, gbc, 3, "Contact Info:", contactInfoField);
+        addFormRow(panel, gbc, 4, "Hourly Rate:", hourlyRateField);
         
         return panel;
     }
@@ -101,6 +105,9 @@ public class EmployeeDialog extends JDialog {
         roleCombo.setSelectedItem(employee.getRole());
         specializationField.setText(employee.getSpecialization());
         contactInfoField.setText(employee.getContactInfo());
+        if (employee.getHourlyRate() != null) {
+            hourlyRateField.setText(employee.getHourlyRate().toString());
+        }
     }
     
     private void handleSave() {
@@ -138,20 +145,24 @@ public class EmployeeDialog extends JDialog {
     }
     
     private void createNewEmployee() throws Exception {
+        java.math.BigDecimal hourlyRate = new java.math.BigDecimal(hourlyRateField.getText().trim());
         Employee newEmployee = new Employee(
             nameField.getText().trim(),
             (Employee.Role) roleCombo.getSelectedItem(),
             specializationField.getText().trim(),
-            contactInfoField.getText().trim()
+            contactInfoField.getText().trim(),
+            hourlyRate
         );
         employeeDAO.create(newEmployee);
     }
     
     private void updateExistingEmployee() throws Exception {
+        java.math.BigDecimal hourlyRate = new java.math.BigDecimal(hourlyRateField.getText().trim());
         employee.setName(nameField.getText().trim());
         employee.setRole((Employee.Role) roleCombo.getSelectedItem());
         employee.setSpecialization(specializationField.getText().trim());
         employee.setContactInfo(contactInfoField.getText().trim());
+        employee.setHourlyRate(hourlyRate);
         employeeDAO.update(employee);
     }
     

@@ -241,4 +241,120 @@ public class ReportDAO {
         
         return shortages;
     }
+    
+    /**
+     * Represents employee labor hours and pay report
+     */
+    public static class EmployeeLaborReport {
+        private int employeeId;
+        private String employeeName;
+        private String role;
+        private BigDecimal hourlyRate;
+        private BigDecimal totalHours;
+        private BigDecimal totalPay;
+        private int jobCount;
+        
+        public EmployeeLaborReport(int employeeId, String employeeName, String role,
+                                   BigDecimal hourlyRate, BigDecimal totalHours, 
+                                   BigDecimal totalPay, int jobCount) {
+            this.employeeId = employeeId;
+            this.employeeName = employeeName;
+            this.role = role;
+            this.hourlyRate = hourlyRate;
+            this.totalHours = totalHours;
+            this.totalPay = totalPay;
+            this.jobCount = jobCount;
+        }
+        
+        public int getEmployeeId() { return employeeId; }
+        public String getEmployeeName() { return employeeName; }
+        public String getRole() { return role; }
+        public BigDecimal getHourlyRate() { return hourlyRate; }
+        public BigDecimal getTotalHours() { return totalHours; }
+        public BigDecimal getTotalPay() { return totalPay; }
+        public int getJobCount() { return jobCount; }
+    }
+    
+    /**
+     * Get employee labor hours and calculated pay
+     * Shows total hours worked, hourly rate, calculated pay, and number of jobs worked on
+     */
+    public List<EmployeeLaborReport> getEmployeeLaborReport() {
+        List<EmployeeLaborReport> reports = new ArrayList<>();
+        
+        String sql = "SELECT e.employee_id, e.name, e.role, e.hourly_rate, " +
+                     "COALESCE(SUM(w.hours_worked), 0) AS total_hours, " +
+                     "COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) AS total_pay, " +
+                     "COUNT(DISTINCT w.job_id) AS job_count " +
+                     "FROM Employee e " +
+                     "LEFT JOIN WorkLog w ON e.employee_id = w.employee_id " +
+                     "GROUP BY e.employee_id, e.name, e.role, e.hourly_rate " +
+                     "ORDER BY total_hours DESC, e.name ASC";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                int employeeId = rs.getInt("employee_id");
+                String employeeName = rs.getString("name");
+                String role = rs.getString("role");
+                BigDecimal hourlyRate = rs.getBigDecimal("hourly_rate");
+                BigDecimal totalHours = rs.getBigDecimal("total_hours");
+                BigDecimal totalPay = rs.getBigDecimal("total_pay");
+                int jobCount = rs.getInt("job_count");
+                
+                reports.add(new EmployeeLaborReport(employeeId, employeeName, role,
+                                                    hourlyRate, totalHours, totalPay, jobCount));
+            }
+            
+            logger.info("Generated labor report for " + reports.size() + " employees");
+            
+        } catch (SQLException e) {
+            logger.severe("Error generating employee labor report: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return reports;
+    }
+    
+    /**
+     * Get employee labor report for a specific employee
+     */
+    public EmployeeLaborReport getEmployeeLaborReport(int employeeId) {
+        String sql = "SELECT e.employee_id, e.name, e.role, e.hourly_rate, " +
+                     "COALESCE(SUM(w.hours_worked), 0) AS total_hours, " +
+                     "COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) AS total_pay, " +
+                     "COUNT(DISTINCT w.job_id) AS job_count " +
+                     "FROM Employee e " +
+                     "LEFT JOIN WorkLog w ON e.employee_id = w.employee_id " +
+                     "WHERE e.employee_id = ? " +
+                     "GROUP BY e.employee_id, e.name, e.role, e.hourly_rate";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, employeeId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new EmployeeLaborReport(
+                        rs.getInt("employee_id"),
+                        rs.getString("name"),
+                        rs.getString("role"),
+                        rs.getBigDecimal("hourly_rate"),
+                        rs.getBigDecimal("total_hours"),
+                        rs.getBigDecimal("total_pay"),
+                        rs.getInt("job_count")
+                    );
+                }
+            }
+            
+        } catch (SQLException e) {
+            logger.severe("Error generating labor report for employee " + employeeId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
 }
