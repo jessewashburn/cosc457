@@ -2,14 +2,21 @@ package org.bmc.app.ui;
 
 import org.bmc.app.dao.CustomerDAO;
 import org.bmc.app.dao.JobDAO;
+import org.bmc.app.dao.PhotoDAO;
 import org.bmc.app.model.Customer;
 import org.bmc.app.model.Job;
+import org.bmc.app.model.Photo;
+import org.bmc.app.util.PhotoStorageUtil;
 
 import javax.swing.*;
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,6 +34,7 @@ public class JobDialog extends JDialog {
     
     private final JobDAO jobDAO;
     private final CustomerDAO customerDAO;
+    private final PhotoDAO photoDAO;
     private final Job job;
     private boolean saved;
     
@@ -37,6 +45,8 @@ public class JobDialog extends JDialog {
     private JTextField dueDateField;
     private JTextField estimatedLaborCostField;
     private JTextField estimatedMaterialCostField;
+    private JPanel photoThumbnailPanel;
+    private List<Photo> jobPhotos;
     
     /**
      * Wrapper class for displaying customer information in combo box.
@@ -60,8 +70,10 @@ public class JobDialog extends JDialog {
         super(parent, job == null ? "Add Job" : "Edit Job", true);
         this.jobDAO = new JobDAO();
         this.customerDAO = new CustomerDAO();
+        this.photoDAO = new PhotoDAO();
         this.job = job;
         this.saved = false;
+        this.jobPhotos = new ArrayList<>();
         
         initializeComponents();
         layoutComponents();
@@ -69,6 +81,7 @@ public class JobDialog extends JDialog {
         
         if (job != null) {
             populateFields();
+            loadPhotos();
         }
         
         pack();
@@ -89,7 +102,17 @@ public class JobDialog extends JDialog {
     
     private void layoutComponents() {
         setLayout(new BorderLayout(10, 10));
-        add(createFormPanel(), BorderLayout.CENTER);
+        
+        // Create main panel with form and photos side by side
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 0));
+        mainPanel.add(createFormPanel(), BorderLayout.CENTER);
+        
+        // Only show photo panel for existing jobs
+        if (job != null && job.getJobId() != null) {
+            mainPanel.add(createPhotoPanel(), BorderLayout.EAST);
+        }
+        
+        add(mainPanel, BorderLayout.CENTER);
         add(createButtonPanel(), BorderLayout.SOUTH);
     }
     
@@ -290,5 +313,200 @@ public class JobDialog extends JDialog {
     
     public boolean wasSaved() {
         return saved;
+    }
+    
+    /**
+     * Creates the photo management panel
+     */
+    private JPanel createPhotoPanel() {
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
+        panel.setBorder(BorderFactory.createTitledBorder("Job Photos"));
+        panel.setPreferredSize(new Dimension(250, 400));
+        
+        // Thumbnail display area
+        photoThumbnailPanel = new JPanel();
+        photoThumbnailPanel.setLayout(new BoxLayout(photoThumbnailPanel, BoxLayout.Y_AXIS));
+        JScrollPane scrollPane = new JScrollPane(photoThumbnailPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton uploadButton = new JButton("Upload Photo");
+        uploadButton.addActionListener(e -> handlePhotoUpload());
+        buttonPanel.add(uploadButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    /**
+     * Loads photos for the current job
+     */
+    private void loadPhotos() {
+        if (job == null || job.getJobId() == null) {
+            return;
+        }
+        
+        jobPhotos = photoDAO.findByJobId(job.getJobId());
+        refreshPhotoThumbnails();
+    }
+    
+    /**
+     * Refreshes the photo thumbnail display
+     */
+    private void refreshPhotoThumbnails() {
+        if (photoThumbnailPanel == null) {
+            return;
+        }
+        
+        photoThumbnailPanel.removeAll();
+        
+        for (Photo photo : jobPhotos) {
+            JPanel thumbPanel = createThumbnailPanel(photo);
+            photoThumbnailPanel.add(thumbPanel);
+            photoThumbnailPanel.add(Box.createVerticalStrut(5));
+        }
+        
+        photoThumbnailPanel.revalidate();
+        photoThumbnailPanel.repaint();
+    }
+    
+    /**
+     * Creates a thumbnail panel for a photo
+     */
+    private JPanel createThumbnailPanel(Photo photo) {
+        JPanel panel = new JPanel(new BorderLayout(3, 3));
+        panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        panel.setMaximumSize(new Dimension(220, 180));
+        
+        // Load and scale image
+        JLabel imageLabel = new JLabel();
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        imageLabel.setPreferredSize(new Dimension(200, 150));
+        
+        try {
+            File imageFile = PhotoStorageUtil.getPhotoFile(photo.getFilePath());
+            if (imageFile != null && imageFile.exists()) {
+                BufferedImage img = ImageIO.read(imageFile);
+                if (img != null) {
+                    Image scaledImg = img.getScaledInstance(200, 150, Image.SCALE_SMOOTH);
+                    imageLabel.setIcon(new ImageIcon(scaledImg));
+                } else {
+                    imageLabel.setText("Image not found");
+                }
+            } else {
+                imageLabel.setText("File not found");
+            }
+        } catch (Exception e) {
+            imageLabel.setText("Error loading image");
+        }
+        
+        // Click to view full size
+        imageLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        imageLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                viewFullSizePhoto(photo);
+            }
+        });
+        
+        panel.add(imageLabel, BorderLayout.CENTER);
+        
+        // Info and delete button
+        JPanel infoPanel = new JPanel(new BorderLayout());
+        JLabel nameLabel = new JLabel(photo.getDisplayName());
+        nameLabel.setFont(nameLabel.getFont().deriveFont(10f));
+        infoPanel.add(nameLabel, BorderLayout.CENTER);
+        
+        JButton deleteBtn = new JButton("✕");
+        deleteBtn.setFont(deleteBtn.getFont().deriveFont(10f));
+        deleteBtn.setMargin(new Insets(2, 5, 2, 5));
+        deleteBtn.addActionListener(e -> handlePhotoDelete(photo));
+        infoPanel.add(deleteBtn, BorderLayout.EAST);
+        
+        panel.add(infoPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    /**
+     * Handles photo upload
+     */
+    private void handlePhotoUpload() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setDialogTitle("Select Photo");
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+            "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
+        
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            
+            // Ask for description
+            String description = JOptionPane.showInputDialog(this, 
+                "Enter photo description (optional):", 
+                "Photo Description", 
+                JOptionPane.PLAIN_MESSAGE);
+            
+            // Save photo
+            String relativePath = PhotoStorageUtil.savePhoto(selectedFile, job.getJobId(), description);
+            if (relativePath != null) {
+                // Create database record
+                Photo photo = new Photo(job.getJobId(), relativePath, description);
+                Photo savedPhoto = photoDAO.create(photo);
+                
+                if (savedPhoto != null) {
+                    jobPhotos.add(savedPhoto);
+                    refreshPhotoThumbnails();
+                    JOptionPane.showMessageDialog(this, "Photo uploaded successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                        "Failed to save photo to database", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to save photo file. Check file format and size.", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    /**
+     * Handles photo deletion
+     */
+    private void handlePhotoDelete(Photo photo) {
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Delete this photo?", 
+            "Confirm Delete", 
+            JOptionPane.YES_NO_OPTION);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            // Delete from database
+            if (photoDAO.delete(photo.getPhotoId())) {
+                // Delete file
+                PhotoStorageUtil.deletePhoto(photo.getFilePath());
+                
+                // Remove from list and refresh
+                jobPhotos.remove(photo);
+                refreshPhotoThumbnails();
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to delete photo", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    /**
+     * Views a photo in full size
+     */
+    private void viewFullSizePhoto(Photo photo) {
+        PhotoViewerDialog viewer = new PhotoViewerDialog(this, photo);
+        viewer.setVisible(true);
     }
 }
