@@ -23,22 +23,22 @@ public class CustomerDAO {
     
     // SQL Queries
     private static final String INSERT_SQL = 
-        "INSERT INTO Customer (name, phone, email, address) VALUES (?, ?, ?, ?)";
+        "INSERT INTO Customer (name, contact_name, phone, email, address) VALUES (?, ?, ?, ?, ?)";
     
     private static final String SELECT_BY_ID_SQL = 
-        "SELECT customer_id, name, phone, email, address FROM Customer WHERE customer_id = ?";
+        "SELECT customer_id, name, contact_name, phone, email, address FROM Customer WHERE customer_id = ?";
     
     private static final String SELECT_ALL_SQL = 
-        "SELECT customer_id, name, phone, email, address FROM Customer ORDER BY name";
+        "SELECT customer_id, name, contact_name, phone, email, address FROM Customer ORDER BY name";
     
     private static final String UPDATE_SQL = 
-        "UPDATE Customer SET name = ?, phone = ?, email = ?, address = ? WHERE customer_id = ?";
+        "UPDATE Customer SET name = ?, contact_name = ?, phone = ?, email = ?, address = ? WHERE customer_id = ?";
     
     private static final String DELETE_SQL = 
         "DELETE FROM Customer WHERE customer_id = ?";
     
     private static final String SEARCH_BY_NAME_SQL = 
-        "SELECT customer_id, name, phone, email, address FROM Customer " +
+        "SELECT customer_id, name, contact_name, phone, email, address FROM Customer " +
         "WHERE name LIKE ? ORDER BY name";
     
     private static final String COUNT_JOBS_SQL = 
@@ -65,9 +65,10 @@ public class CustomerDAO {
             pstmt = conn.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS);
             
             pstmt.setString(1, customer.getName());
-            pstmt.setString(2, customer.getPhone());
-            pstmt.setString(3, customer.getEmail());
-            pstmt.setString(4, customer.getAddress());
+            pstmt.setString(2, customer.getContactName());
+            pstmt.setString(3, customer.getPhone());
+            pstmt.setString(4, customer.getEmail());
+            pstmt.setString(5, customer.getAddress());
             
             int rowsAffected = pstmt.executeUpdate();
             
@@ -176,10 +177,11 @@ public class CustomerDAO {
             pstmt = conn.prepareStatement(UPDATE_SQL);
             
             pstmt.setString(1, customer.getName());
-            pstmt.setString(2, customer.getPhone());
-            pstmt.setString(3, customer.getEmail());
-            pstmt.setString(4, customer.getAddress());
-            pstmt.setInt(5, customer.getCustomerId());
+            pstmt.setString(2, customer.getContactName());
+            pstmt.setString(3, customer.getPhone());
+            pstmt.setString(4, customer.getEmail());
+            pstmt.setString(5, customer.getAddress());
+            pstmt.setInt(6, customer.getCustomerId());
             
             int rowsAffected = pstmt.executeUpdate();
             
@@ -318,6 +320,7 @@ public class CustomerDAO {
         return new Customer(
             rs.getInt("customer_id"),
             rs.getString("name"),
+            rs.getString("contact_name"),
             rs.getString("phone"),
             rs.getString("email"),
             rs.getString("address")

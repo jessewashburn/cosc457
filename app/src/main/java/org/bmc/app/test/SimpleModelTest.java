@@ -41,14 +41,14 @@ public class SimpleModelTest {
         LOGGER.info("--- Testing Customer Model ---");
         
         // Valid customer
-        Customer customer1 = new Customer(null, "Baltimore Ironworks", "410-555-1234", 
+        Customer customer1 = new Customer(null, "Baltimore Ironworks", "John Doe", "410-555-1234", 
             "contact@baltironworks.com", "123 Harbor Blvd, Baltimore, MD");
         
         LOGGER.info(() -> String.format("Created customer: %s", customer1.getDisplayName()));
         LOGGER.info(() -> String.format("Customer is valid: %b", customer1.isValid()));
         
         // Invalid customer (no name)
-        Customer customer2 = new Customer(null, "", "410-555-5678", "test@test.com", "456 Main St");
+        Customer customer2 = new Customer(null, "", "Jane Smith", "410-555-5678", "test@test.com", "456 Main St");
         LOGGER.info(() -> String.format("Invalid customer is valid: %b", customer2.isValid()));
     }
     
@@ -139,7 +139,7 @@ public class SimpleModelTest {
         LOGGER.info("--- Testing Model Interactions ---");
         
         // Create related objects
-        Customer customer = new Customer(100, "Heritage Restoration Inc", "410-555-9999", 
+        Customer customer = new Customer(100, "Heritage Restoration Inc", "Michael Heritage", "410-555-9999", 
             "info@heritage.com", "789 Charles St, Baltimore, MD");
         
         Job job = new Job();

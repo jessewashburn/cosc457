@@ -16,6 +16,7 @@ public class CustomerDialog extends JDialog {
     private static final int NAME_FIELD_COLS = 30;
     private static final int PHONE_FIELD_COLS = 20;
     private static final int EMAIL_FIELD_COLS = 30;
+    private static final int CONTACT_FIELD_COLS = 30;
     private static final int ADDRESS_ROWS = 3;
     private static final int ADDRESS_COLS = 30;
     
@@ -24,6 +25,7 @@ public class CustomerDialog extends JDialog {
     private boolean saved;
     
     private JTextField nameField;
+    private JTextField contactNameField;
     private JTextField phoneField;
     private JTextField emailField;
     private JTextArea addressArea;
@@ -47,6 +49,7 @@ public class CustomerDialog extends JDialog {
     
     private void initializeComponents() {
         nameField = new JTextField(NAME_FIELD_COLS);
+        contactNameField = new JTextField(CONTACT_FIELD_COLS);
         phoneField = new JTextField(PHONE_FIELD_COLS);
         emailField = new JTextField(EMAIL_FIELD_COLS);
         addressArea = new JTextArea(ADDRESS_ROWS, ADDRESS_COLS);
@@ -69,10 +72,11 @@ public class CustomerDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
         addFormRow(panel, gbc, 0, "Name:", nameField);
-        addFormRow(panel, gbc, 1, "Phone:", phoneField);
-        addFormRow(panel, gbc, 2, "Email:", emailField);
+        addFormRow(panel, gbc, 1, "Contact Name:", contactNameField);
+        addFormRow(panel, gbc, 2, "Phone:", phoneField);
+        addFormRow(panel, gbc, 3, "Email:", emailField);
         
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         gbc.gridx = 0;
         gbc.anchor = GridBagConstraints.NORTHEAST;
         panel.add(new JLabel("Address:"), gbc);
@@ -112,6 +116,7 @@ public class CustomerDialog extends JDialog {
     
     private void populateFields() {
         nameField.setText(customer.getName());
+        contactNameField.setText(customer.getContactName());
         phoneField.setText(customer.getPhone());
         emailField.setText(customer.getEmail());
         addressArea.setText(customer.getAddress());
@@ -147,6 +152,7 @@ public class CustomerDialog extends JDialog {
     private void createNewCustomer() throws Exception {
         Customer newCustomer = new Customer(
             nameField.getText().trim(),
+            contactNameField.getText().trim(),
             phoneField.getText().trim(),
             emailField.getText().trim(),
             addressArea.getText().trim()
@@ -156,6 +162,7 @@ public class CustomerDialog extends JDialog {
     
     private void updateExistingCustomer() throws Exception {
         customer.setName(nameField.getText().trim());
+        customer.setContactName(contactNameField.getText().trim());
         customer.setPhone(phoneField.getText().trim());
         customer.setEmail(emailField.getText().trim());
         customer.setAddress(addressArea.getText().trim());

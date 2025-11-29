@@ -143,7 +143,7 @@ public class CustomerPanel extends JPanel {
             Object[] row = {
                 customer.getCustomerId(),
                 customer.getName(),
-                "", // No separate contact name in model
+                customer.getContactName(),
                 customer.getPhone(),
                 customer.getEmail(),
                 customer.getAddress()

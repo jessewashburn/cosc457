@@ -10,6 +10,7 @@ public class Customer {
     
     private Integer customerId;
     private String name;
+    private String contactName;
     private String phone;
     private String email;
     private String address;
@@ -23,13 +24,15 @@ public class Customer {
     /**
      * Constructor without ID (for new customers)
      * 
-     * @param name customer name
+     * @param name customer/company name
+     * @param contactName contact person name
      * @param phone customer phone number
      * @param email customer email address
      * @param address customer address
      */
-    public Customer(String name, String phone, String email, String address) {
+    public Customer(String name, String contactName, String phone, String email, String address) {
         this.name = name;
+        this.contactName = contactName;
         this.phone = phone;
         this.email = email;
         this.address = address;
@@ -39,14 +42,16 @@ public class Customer {
      * Full constructor with ID
      * 
      * @param customerId unique customer ID
-     * @param name customer name
+     * @param name customer/company name
+     * @param contactName contact person name
      * @param phone customer phone number
      * @param email customer email address
      * @param address customer address
      */
-    public Customer(Integer customerId, String name, String phone, String email, String address) {
+    public Customer(Integer customerId, String name, String contactName, String phone, String email, String address) {
         this.customerId = customerId;
         this.name = name;
+        this.contactName = contactName;
         this.phone = phone;
         this.email = email;
         this.address = address;
@@ -68,6 +73,14 @@ public class Customer {
     
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public String getContactName() {
+        return contactName;
+    }
+    
+    public void setContactName(String contactName) {
+        this.contactName = contactName;
     }
     
     public String getPhone() {
