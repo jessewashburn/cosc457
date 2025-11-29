@@ -2,6 +2,7 @@ package org.bmc.app.dao;
 
 import org.bmc.app.util.DBConnection;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -516,5 +517,262 @@ public class ReportDAO {
         }
         
         return spending;
+    }
+    
+    /**
+     * Represents comprehensive cost comparison (estimated vs actual) for a job, including labor and materials
+     */
+    public static class JobCostComparisonReport {
+        private int jobId;
+        private String customerName;
+        private String description;
+        private String status;
+        private BigDecimal estimatedLaborCost;
+        private BigDecimal actualLaborCost;
+        private BigDecimal laborVariance;
+        private double laborVariancePercent;
+        private BigDecimal estimatedMaterialCost;
+        private BigDecimal actualMaterialCost;
+        private BigDecimal materialVariance;
+        private double materialVariancePercent;
+        private BigDecimal estimatedTotalCost;
+        private BigDecimal actualTotalCost;
+        private BigDecimal totalVariance;
+        private double totalVariancePercent;
+        
+        public JobCostComparisonReport(int jobId, String customerName, String description, String status,
+                                       BigDecimal estimatedLaborCost, BigDecimal actualLaborCost,
+                                       BigDecimal laborVariance, double laborVariancePercent,
+                                       BigDecimal estimatedMaterialCost, BigDecimal actualMaterialCost,
+                                       BigDecimal materialVariance, double materialVariancePercent,
+                                       BigDecimal estimatedTotalCost, BigDecimal actualTotalCost,
+                                       BigDecimal totalVariance, double totalVariancePercent) {
+            this.jobId = jobId;
+            this.customerName = customerName;
+            this.description = description;
+            this.status = status;
+            this.estimatedLaborCost = estimatedLaborCost;
+            this.actualLaborCost = actualLaborCost;
+            this.laborVariance = laborVariance;
+            this.laborVariancePercent = laborVariancePercent;
+            this.estimatedMaterialCost = estimatedMaterialCost;
+            this.actualMaterialCost = actualMaterialCost;
+            this.materialVariance = materialVariance;
+            this.materialVariancePercent = materialVariancePercent;
+            this.estimatedTotalCost = estimatedTotalCost;
+            this.actualTotalCost = actualTotalCost;
+            this.totalVariance = totalVariance;
+            this.totalVariancePercent = totalVariancePercent;
+        }
+        
+        public int getJobId() { return jobId; }
+        public String getCustomerName() { return customerName; }
+        public String getDescription() { return description; }
+        public String getStatus() { return status; }
+        public BigDecimal getEstimatedLaborCost() { return estimatedLaborCost; }
+        public BigDecimal getActualLaborCost() { return actualLaborCost; }
+        public BigDecimal getLaborVariance() { return laborVariance; }
+        public double getLaborVariancePercent() { return laborVariancePercent; }
+        public BigDecimal getEstimatedMaterialCost() { return estimatedMaterialCost; }
+        public BigDecimal getActualMaterialCost() { return actualMaterialCost; }
+        public BigDecimal getMaterialVariance() { return materialVariance; }
+        public double getMaterialVariancePercent() { return materialVariancePercent; }
+        public BigDecimal getEstimatedTotalCost() { return estimatedTotalCost; }
+        public BigDecimal getActualTotalCost() { return actualTotalCost; }
+        public BigDecimal getTotalVariance() { return totalVariance; }
+        public double getTotalVariancePercent() { return totalVariancePercent; }
+    }
+    
+    /**
+     * Compare estimated vs actual costs per job (labor + materials + total).
+     * Calculates variance and percentage difference for each category.
+     * Only includes jobs that have either estimated or actual costs.
+     */
+    public List<JobCostComparisonReport> getJobCostComparison() {
+        List<JobCostComparisonReport> comparisons = new ArrayList<>();
+        
+        String sql = 
+            "SELECT " +
+            "    j.job_id, " +
+            "    c.name AS customer_name, " +
+            "    j.description, " +
+            "    j.status, " +
+            "    COALESCE(j.estimated_labor_cost, 0) AS estimated_labor_cost, " +
+            "    COALESCE(j.estimated_material_cost, 0) AS estimated_material_cost, " +
+            "    COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) AS actual_labor_cost, " +
+            "    COALESCE(SUM(jm.quantity_used * m.unit_cost), 0) AS actual_material_cost " +
+            "FROM Job j " +
+            "INNER JOIN Customer c ON j.customer_id = c.customer_id " +
+            "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
+            "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
+            "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
+            "LEFT JOIN Material m ON jm.material_id = m.material_id " +
+            "GROUP BY j.job_id, c.name, j.description, j.status, j.estimated_labor_cost, j.estimated_material_cost " +
+            "HAVING (j.estimated_labor_cost > 0 OR actual_labor_cost > 0 OR j.estimated_material_cost > 0 OR actual_material_cost > 0) " +
+            "ORDER BY j.job_id";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                int jobId = rs.getInt("job_id");
+                String customerName = rs.getString("customer_name");
+                String description = rs.getString("description");
+                String status = rs.getString("status");
+                
+                BigDecimal estimatedLabor = rs.getBigDecimal("estimated_labor_cost");
+                BigDecimal estimatedMaterial = rs.getBigDecimal("estimated_material_cost");
+                BigDecimal actualLabor = rs.getBigDecimal("actual_labor_cost");
+                BigDecimal actualMaterial = rs.getBigDecimal("actual_material_cost");
+                
+                // Calculate labor variance
+                BigDecimal laborVariance = actualLabor.subtract(estimatedLabor);
+                double laborVariancePercent = 0.0;
+                if (estimatedLabor.compareTo(BigDecimal.ZERO) > 0) {
+                    laborVariancePercent = laborVariance.divide(estimatedLabor, 4, RoundingMode.HALF_UP)
+                                                       .multiply(new BigDecimal(100))
+                                                       .doubleValue();
+                }
+                
+                // Calculate material variance
+                BigDecimal materialVariance = actualMaterial.subtract(estimatedMaterial);
+                double materialVariancePercent = 0.0;
+                if (estimatedMaterial.compareTo(BigDecimal.ZERO) > 0) {
+                    materialVariancePercent = materialVariance.divide(estimatedMaterial, 4, RoundingMode.HALF_UP)
+                                                             .multiply(new BigDecimal(100))
+                                                             .doubleValue();
+                }
+                
+                // Calculate total costs
+                BigDecimal estimatedTotal = estimatedLabor.add(estimatedMaterial);
+                BigDecimal actualTotal = actualLabor.add(actualMaterial);
+                BigDecimal totalVariance = actualTotal.subtract(estimatedTotal);
+                double totalVariancePercent = 0.0;
+                if (estimatedTotal.compareTo(BigDecimal.ZERO) > 0) {
+                    totalVariancePercent = totalVariance.divide(estimatedTotal, 4, RoundingMode.HALF_UP)
+                                                       .multiply(new BigDecimal(100))
+                                                       .doubleValue();
+                }
+                
+                comparisons.add(new JobCostComparisonReport(
+                    jobId, customerName, description, status,
+                    estimatedLabor, actualLabor, laborVariance, laborVariancePercent,
+                    estimatedMaterial, actualMaterial, materialVariance, materialVariancePercent,
+                    estimatedTotal, actualTotal, totalVariance, totalVariancePercent
+                ));
+            }
+            
+            logger.info("Generated job cost comparison for " + comparisons.size() + " jobs");
+            
+        } catch (SQLException e) {
+            logger.severe("Error generating job cost comparison: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return comparisons;
+    }
+    
+    /**
+     * Represents labor cost comparison (estimated vs actual) for a job
+     * @deprecated Use JobCostComparisonReport instead for comprehensive cost tracking
+     */
+    @Deprecated
+    public static class LaborCostComparisonReport {
+        private int jobId;
+        private String customerName;
+        private String description;
+        private BigDecimal estimatedLaborCost;
+        private BigDecimal actualLaborCost;
+        private BigDecimal variance;
+        private double variancePercent;
+        private String status;
+        
+        public LaborCostComparisonReport(int jobId, String customerName, String description,
+                                         BigDecimal estimatedLaborCost, BigDecimal actualLaborCost,
+                                         BigDecimal variance, double variancePercent, String status) {
+            this.jobId = jobId;
+            this.customerName = customerName;
+            this.description = description;
+            this.estimatedLaborCost = estimatedLaborCost;
+            this.actualLaborCost = actualLaborCost;
+            this.variance = variance;
+            this.variancePercent = variancePercent;
+            this.status = status;
+        }
+        
+        public int getJobId() { return jobId; }
+        public String getCustomerName() { return customerName; }
+        public String getDescription() { return description; }
+        public BigDecimal getEstimatedLaborCost() { return estimatedLaborCost; }
+        public BigDecimal getActualLaborCost() { return actualLaborCost; }
+        public BigDecimal getVariance() { return variance; }
+        public double getVariancePercent() { return variancePercent; }
+        public String getStatus() { return status; }
+    }
+    
+    /**
+     * Compare estimated vs actual labor costs per job.
+     * Calculates variance and percentage difference.
+     * Only includes jobs that have either estimated or actual labor costs.
+     * @deprecated Use getJobCostComparison() instead for comprehensive cost tracking
+     */
+    @Deprecated
+    public List<LaborCostComparisonReport> getLaborCostComparison() {
+        List<LaborCostComparisonReport> comparisons = new ArrayList<>();
+        
+        String sql = 
+            "SELECT " +
+            "    j.job_id, " +
+            "    c.name AS customer_name, " +
+            "    j.description, " +
+            "    j.status, " +
+            "    COALESCE(j.estimated_labor_cost, 0) AS estimated_labor_cost, " +
+            "    COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) AS actual_labor_cost " +
+            "FROM Job j " +
+            "INNER JOIN Customer c ON j.customer_id = c.customer_id " +
+            "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
+            "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
+            "GROUP BY j.job_id, c.name, j.description, j.status, j.estimated_labor_cost " +
+            "HAVING estimated_labor_cost > 0 OR actual_labor_cost > 0 " +
+            "ORDER BY j.job_id";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                int jobId = rs.getInt("job_id");
+                String customerName = rs.getString("customer_name");
+                String description = rs.getString("description");
+                String status = rs.getString("status");
+                BigDecimal estimatedCost = rs.getBigDecimal("estimated_labor_cost");
+                BigDecimal actualCost = rs.getBigDecimal("actual_labor_cost");
+                
+                // Calculate variance (actual - estimated)
+                BigDecimal variance = actualCost.subtract(estimatedCost);
+                
+                // Calculate variance percentage
+                double variancePercent = 0.0;
+                if (estimatedCost.compareTo(BigDecimal.ZERO) > 0) {
+                    variancePercent = variance.divide(estimatedCost, 4, RoundingMode.HALF_UP)
+                                              .multiply(new BigDecimal(100))
+                                              .doubleValue();
+                }
+                
+                comparisons.add(new LaborCostComparisonReport(
+                    jobId, customerName, description, estimatedCost, actualCost,
+                    variance, variancePercent, status
+                ));
+            }
+            
+            logger.info("Generated labor cost comparison for " + comparisons.size() + " jobs");
+            
+        } catch (SQLException e) {
+            logger.severe("Error generating labor cost comparison: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return comparisons;
     }
 }

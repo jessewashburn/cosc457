@@ -5,6 +5,7 @@ org\bmc\app\model\POItem.class
 org\bmc\app\ui\CustomerPanel.class
 org\bmc\app\ui\JobDialog$CustomerItem.class
 org\bmc\app\ui\JobMaterialDialog$MaterialItem.class
+org\bmc\app\ui\ReportsPanel$8.class
 org\bmc\app\dao\EmployeeDAO.class
 org\bmc\app\ui\InvoiceDialog$JobItem.class
 org\bmc\app\ui\ReportsPanel$4.class
@@ -17,6 +18,7 @@ org\bmc\app\ui\ReportsPanel.class
 org\bmc\app\dao\CustomerDAO.class
 org\bmc\app\ui\CustomerDialog.class
 org\bmc\app\model\Invoice.class
+org\bmc\app\ui\ReportsPanel$7.class
 org\bmc\app\ui\JobDialog.class
 org\bmc\app\dao\JobMaterialDAO.class
 org\bmc\app\dao\ReportDAO$TopCustomerReport.class
@@ -31,6 +33,7 @@ org\bmc\app\ui\PurchaseOrderDialog.class
 org\bmc\app\ui\EmployeeDialog.class
 org\bmc\app\dao\ReportDAO$VendorSpendingReport.class
 org\bmc\app\ui\JobPanel.class
+org\bmc\app\dao\ReportDAO$JobCostComparisonReport.class
 org\bmc\app\dao\ReportDAO.class
 org\bmc\app\model\Employee$Role.class
 org\bmc\app\dao\POItemDAO.class
@@ -42,6 +45,7 @@ org\bmc\app\model\Vendor.class
 org\bmc\app\model\Material.class
 org\bmc\app\dao\VendorDAO.class
 org\bmc\app\ui\ReportsPanel$3.class
+org\bmc\app\dao\ReportDAO$LaborCostComparisonReport.class
 org\bmc\app\model\PurchaseOrder.class
 org\bmc\app\ui\PurchaseOrderDialog$1.class
 org\bmc\app\ui\ReportsPanel$6.class

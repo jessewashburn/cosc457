@@ -53,6 +53,8 @@ public class Job {
     private LocalDate startDate;
     private LocalDate dueDate;
     private Status status;
+    private BigDecimal estimatedLaborCost;
+    private BigDecimal estimatedMaterialCost;
     
     // Additional fields for display purposes (not stored in Job table)
     private String customerName;
@@ -76,13 +78,16 @@ public class Job {
      * @param status job status
      */
     public Job(Integer customerId, Integer quoteId, String description, 
-               LocalDate startDate, LocalDate dueDate, Status status) {
+               LocalDate startDate, LocalDate dueDate, Status status, 
+               BigDecimal estimatedLaborCost, BigDecimal estimatedMaterialCost) {
         this.customerId = customerId;
         this.quoteId = quoteId;
         this.description = description;
         this.startDate = startDate;
         this.dueDate = dueDate;
         this.status = status != null ? status : Status.PLANNED;
+        this.estimatedLaborCost = estimatedLaborCost;
+        this.estimatedMaterialCost = estimatedMaterialCost;
     }
     
     /**
@@ -179,6 +184,22 @@ public class Job {
     
     public void setEstimatedValue(BigDecimal estimatedValue) {
         this.estimatedValue = estimatedValue;
+    }
+    
+    public BigDecimal getEstimatedLaborCost() {
+        return estimatedLaborCost;
+    }
+    
+    public void setEstimatedLaborCost(BigDecimal estimatedLaborCost) {
+        this.estimatedLaborCost = estimatedLaborCost;
+    }
+    
+    public BigDecimal getEstimatedMaterialCost() {
+        return estimatedMaterialCost;
+    }
+    
+    public void setEstimatedMaterialCost(BigDecimal estimatedMaterialCost) {
+        this.estimatedMaterialCost = estimatedMaterialCost;
     }
     
     // Business Methods

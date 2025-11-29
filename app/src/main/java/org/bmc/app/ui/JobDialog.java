@@ -35,6 +35,8 @@ public class JobDialog extends JDialog {
     private JComboBox<Job.Status> statusCombo;
     private JTextField startDateField;
     private JTextField dueDateField;
+    private JTextField estimatedLaborCostField;
+    private JTextField estimatedMaterialCostField;
     
     /**
      * Wrapper class for displaying customer information in combo box.
@@ -81,6 +83,8 @@ public class JobDialog extends JDialog {
         statusCombo = new JComboBox<>(Job.Status.values());
         startDateField = new JTextField(DATE_FIELD_COLS);
         dueDateField = new JTextField(DATE_FIELD_COLS);
+        estimatedLaborCostField = new JTextField(DATE_FIELD_COLS);
+        estimatedMaterialCostField = new JTextField(DATE_FIELD_COLS);
     }
     
     private void layoutComponents() {
@@ -110,6 +114,8 @@ public class JobDialog extends JDialog {
         addFormRow(panel, gbc, 2, "Status:", statusCombo);
         addFormRow(panel, gbc, 3, "Start Date:", createDatePanel(startDateField));
         addFormRow(panel, gbc, 4, "Due Date:", createDatePanel(dueDateField));
+        addFormRow(panel, gbc, 5, "Est. Labor Cost:", estimatedLaborCostField);
+        addFormRow(panel, gbc, 6, "Est. Material Cost:", estimatedMaterialCostField);
         
         return panel;
     }
@@ -177,6 +183,12 @@ public class JobDialog extends JDialog {
         if (job.getDueDate() != null) {
             dueDateField.setText(job.getDueDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
         }
+        if (job.getEstimatedLaborCost() != null) {
+            estimatedLaborCostField.setText(job.getEstimatedLaborCost().toString());
+        }
+        if (job.getEstimatedMaterialCost() != null) {
+            estimatedMaterialCostField.setText(job.getEstimatedMaterialCost().toString());
+        }
     }
     
     private void handleSave() {
@@ -230,7 +242,9 @@ public class JobDialog extends JDialog {
             descriptionArea.getText().trim(),
             startDate,
             dueDate,
-            (Job.Status) statusCombo.getSelectedItem()
+            (Job.Status) statusCombo.getSelectedItem(),
+            parseEstimatedLaborCost(),
+            parseEstimatedMaterialCost()
         );
         jobDAO.create(newJob);
     }
@@ -241,7 +255,33 @@ public class JobDialog extends JDialog {
         job.setStartDate(startDate);
         job.setDueDate(dueDate);
         job.setStatus((Job.Status) statusCombo.getSelectedItem());
+        job.setEstimatedLaborCost(parseEstimatedLaborCost());
+        job.setEstimatedMaterialCost(parseEstimatedMaterialCost());
         jobDAO.update(job);
+    }
+    
+    private java.math.BigDecimal parseEstimatedLaborCost() {
+        String text = estimatedLaborCostField.getText().trim();
+        if (text.isEmpty()) {
+            return java.math.BigDecimal.ZERO;
+        }
+        try {
+            return new java.math.BigDecimal(text);
+        } catch (NumberFormatException e) {
+            return java.math.BigDecimal.ZERO;
+        }
+    }
+    
+    private java.math.BigDecimal parseEstimatedMaterialCost() {
+        String text = estimatedMaterialCostField.getText().trim();
+        if (text.isEmpty()) {
+            return java.math.BigDecimal.ZERO;
+        }
+        try {
+            return new java.math.BigDecimal(text);
+        } catch (NumberFormatException e) {
+            return java.math.BigDecimal.ZERO;
+        }
     }
     
     private void showErrorDialog(String message) {

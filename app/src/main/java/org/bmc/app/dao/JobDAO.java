@@ -1,5 +1,6 @@
 package org.bmc.app.dao;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -25,10 +26,10 @@ public class JobDAO {
     
     // SQL Queries
     private static final String INSERT_SQL = 
-        "INSERT INTO Job (customer_id, quote_id, description, start_date, due_date, status) VALUES (?, ?, ?, ?, ?, ?)";
+        "INSERT INTO Job (customer_id, quote_id, description, start_date, due_date, status, estimated_labor_cost, estimated_material_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     
     private static final String SELECT_BY_ID_SQL = 
-        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
+        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, " +
         "c.name as customer_name, " +
         "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) + COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) as estimated_value " +
         "FROM Job j " +
@@ -38,10 +39,10 @@ public class JobDAO {
         "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
         "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
         "WHERE j.job_id = ? " +
-        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name";
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, c.name";
     
     private static final String SELECT_ALL_SQL = 
-        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
+        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, " +
         "c.name as customer_name, " +
         "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) + COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) as estimated_value " +
         "FROM Job j " +
@@ -50,18 +51,18 @@ public class JobDAO {
         "LEFT JOIN Material m ON jm.material_id = m.material_id " +
         "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
         "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
-        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, c.name " +
         "ORDER BY j.due_date, j.job_id";
     
     private static final String UPDATE_SQL = 
-        "UPDATE Job SET customer_id = ?, quote_id = ?, description = ?, start_date = ?, due_date = ?, status = ? " +
+        "UPDATE Job SET customer_id = ?, quote_id = ?, description = ?, start_date = ?, due_date = ?, status = ?, estimated_labor_cost = ?, estimated_material_cost = ? " +
         "WHERE job_id = ?";
     
     private static final String DELETE_SQL = 
         "DELETE FROM Job WHERE job_id = ?";
     
     private static final String SELECT_BY_STATUS_SQL = 
-        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
+        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, " +
         "c.name as customer_name, " +
         "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) + COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) as estimated_value " +
         "FROM Job j " +
@@ -71,11 +72,11 @@ public class JobDAO {
         "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
         "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
         "WHERE j.status = ? " +
-        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, c.name " +
         "ORDER BY j.due_date";
     
     private static final String SELECT_BY_CUSTOMER_SQL = 
-        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
+        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, " +
         "c.name as customer_name, " +
         "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) + COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) as estimated_value " +
         "FROM Job j " +
@@ -85,11 +86,11 @@ public class JobDAO {
         "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
         "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
         "WHERE j.customer_id = ? " +
-        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, c.name " +
         "ORDER BY j.start_date DESC";
     
     private static final String SELECT_DUE_SOON_SQL = 
-        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
+        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, " +
         "c.name as customer_name, " +
         "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) + COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) as estimated_value " +
         "FROM Job j " +
@@ -99,11 +100,11 @@ public class JobDAO {
         "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
         "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
         "WHERE j.status IN ('Planned', 'InProgress') AND j.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY) " +
-        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, c.name " +
         "ORDER BY j.due_date";
     
     private static final String SELECT_OVERDUE_SQL = 
-        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, " +
+        "SELECT j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, " +
         "c.name as customer_name, " +
         "COALESCE(SUM(m.unit_cost * jm.quantity_used), 0) + COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) as estimated_value " +
         "FROM Job j " +
@@ -113,7 +114,7 @@ public class JobDAO {
         "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
         "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
         "WHERE j.status IN ('Planned', 'InProgress') AND j.due_date < CURDATE() " +
-        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, c.name " +
+        "GROUP BY j.job_id, j.customer_id, j.quote_id, j.description, j.start_date, j.due_date, j.status, j.estimated_labor_cost, j.estimated_material_cost, c.name " +
         "ORDER BY j.due_date";
     
     private static final String COUNT_RELATED_RECORDS_SQL = 
@@ -155,6 +156,16 @@ public class JobDAO {
             pstmt.setDate(4, job.getStartDate() != null ? Date.valueOf(job.getStartDate()) : null);
             pstmt.setDate(5, job.getDueDate() != null ? Date.valueOf(job.getDueDate()) : null);
             pstmt.setString(6, job.getStatus().getValue());
+            if (job.getEstimatedLaborCost() != null) {
+                pstmt.setBigDecimal(7, job.getEstimatedLaborCost());
+            } else {
+                pstmt.setBigDecimal(7, BigDecimal.ZERO);
+            }
+            if (job.getEstimatedMaterialCost() != null) {
+                pstmt.setBigDecimal(8, job.getEstimatedMaterialCost());
+            } else {
+                pstmt.setBigDecimal(8, BigDecimal.ZERO);
+            }
             
             int rowsAffected = pstmt.executeUpdate();
             
@@ -272,7 +283,17 @@ public class JobDAO {
             pstmt.setDate(4, job.getStartDate() != null ? Date.valueOf(job.getStartDate()) : null);
             pstmt.setDate(5, job.getDueDate() != null ? Date.valueOf(job.getDueDate()) : null);
             pstmt.setString(6, job.getStatus().getValue());
-            pstmt.setInt(7, job.getJobId());
+            if (job.getEstimatedLaborCost() != null) {
+                pstmt.setBigDecimal(7, job.getEstimatedLaborCost());
+            } else {
+                pstmt.setBigDecimal(7, BigDecimal.ZERO);
+            }
+            if (job.getEstimatedMaterialCost() != null) {
+                pstmt.setBigDecimal(8, job.getEstimatedMaterialCost());
+            } else {
+                pstmt.setBigDecimal(8, BigDecimal.ZERO);
+            }
+            pstmt.setInt(9, job.getJobId());
             
             int rowsAffected = pstmt.executeUpdate();
             
@@ -547,6 +568,10 @@ public class JobDAO {
         
         // Set additional display fields if available
         job.setCustomerName(rs.getString("customer_name"));
+        
+        // Set estimated costs from database
+        job.setEstimatedLaborCost(rs.getBigDecimal("estimated_labor_cost"));
+        job.setEstimatedMaterialCost(rs.getBigDecimal("estimated_material_cost"));
         
         // Set estimated value from materials calculation
         job.setEstimatedValue(rs.getBigDecimal("estimated_value"));

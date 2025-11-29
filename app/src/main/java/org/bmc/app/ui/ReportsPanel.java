@@ -7,9 +7,11 @@ import org.bmc.app.dao.ReportDAO.TopCustomerReport;
 import org.bmc.app.dao.ReportDAO.EmployeeLaborReport;
 import org.bmc.app.dao.ReportDAO.UnpaidInvoiceReport;
 import org.bmc.app.dao.ReportDAO.VendorSpendingReport;
+import org.bmc.app.dao.ReportDAO.JobCostComparisonReport;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
@@ -52,6 +54,10 @@ public class ReportsPanel extends JPanel {
     private JTable vendorSpendingTable;
     private DefaultTableModel vendorSpendingTableModel;
     
+    // Labor Cost Comparison Report Components
+    private JTable jobCostComparisonTable;
+    private DefaultTableModel jobCostComparisonTableModel;
+    
     public ReportsPanel() {
         this.reportDAO = new ReportDAO();
         setLayout(new BorderLayout(10, 10));
@@ -72,6 +78,7 @@ public class ReportsPanel extends JPanel {
         reportTabs.addTab("Employee Labor", createEmployeeLaborPanel());
         reportTabs.addTab("Unpaid Invoices (30+ Days)", createUnpaidInvoicesPanel());
         reportTabs.addTab("Vendor Spending by Month", createVendorSpendingPanel());
+        reportTabs.addTab("Job Cost Comparison", createJobCostComparisonPanel());
         
         add(reportTabs, BorderLayout.CENTER);
     }
@@ -583,6 +590,140 @@ public class ReportsPanel extends JPanel {
     }
     
     /**
+     * Create the Labor Cost Comparison report panel
+     */
+    private JPanel createJobCostComparisonPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("Job Cost Comparison: Estimated vs Actual");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> loadJobCostComparisonReport());
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Table with comprehensive columns
+        String[] columns = {
+            "Job ID", "Customer", "Description", "Status",
+            "Est. Labor", "Actual Labor", "Labor Var%",
+            "Est. Material", "Actual Material", "Material Var%",
+            "Est. Total", "Actual Total", "Total Var%"
+        };
+        jobCostComparisonTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        jobCostComparisonTable = new JTable(jobCostComparisonTableModel);
+        jobCostComparisonTable.setAutoCreateRowSorter(true);
+        jobCostComparisonTable.setRowHeight(25);
+        
+        // Add custom renderer for variance columns to show red for over-budget
+        jobCostComparisonTable.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, 
+                                                          boolean isSelected, boolean hasFocus, 
+                                                          int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                // Check if it's a variance percentage column (6, 9, or 12)
+                if (column == 6 || column == 9 || column == 12) {
+                    String varValue = value.toString();
+                    try {
+                        double variance = Double.parseDouble(varValue.replace("%", ""));
+                        if (variance > 0) {
+                            c.setForeground(Color.RED);
+                        } else {
+                            c.setForeground(isSelected ? table.getSelectionForeground() : Color.BLACK);
+                        }
+                    } catch (NumberFormatException e) {
+                        c.setForeground(isSelected ? table.getSelectionForeground() : Color.BLACK);
+                    }
+                } else {
+                    c.setForeground(isSelected ? table.getSelectionForeground() : Color.BLACK);
+                }
+                
+                if (!isSelected) {
+                    c.setBackground(Color.WHITE);
+                } else {
+                    c.setBackground(table.getSelectionBackground());
+                }
+                
+                return c;
+            }
+        });
+        
+        // Set column widths
+        jobCostComparisonTable.getColumnModel().getColumn(0).setPreferredWidth(60);   // Job ID
+        jobCostComparisonTable.getColumnModel().getColumn(1).setPreferredWidth(120);  // Customer
+        jobCostComparisonTable.getColumnModel().getColumn(2).setPreferredWidth(150);  // Description
+        jobCostComparisonTable.getColumnModel().getColumn(3).setPreferredWidth(80);   // Status
+        jobCostComparisonTable.getColumnModel().getColumn(4).setPreferredWidth(90);   // Est. Labor
+        jobCostComparisonTable.getColumnModel().getColumn(5).setPreferredWidth(90);   // Actual Labor
+        jobCostComparisonTable.getColumnModel().getColumn(6).setPreferredWidth(80);   // Labor Var%
+        jobCostComparisonTable.getColumnModel().getColumn(7).setPreferredWidth(100);  // Est. Material
+        jobCostComparisonTable.getColumnModel().getColumn(8).setPreferredWidth(100);  // Actual Material
+        jobCostComparisonTable.getColumnModel().getColumn(9).setPreferredWidth(90);   // Material Var%
+        jobCostComparisonTable.getColumnModel().getColumn(10).setPreferredWidth(90);  // Est. Total
+        jobCostComparisonTable.getColumnModel().getColumn(11).setPreferredWidth(90);  // Actual Total
+        jobCostComparisonTable.getColumnModel().getColumn(12).setPreferredWidth(80);  // Total Var%
+        
+        JScrollPane scrollPane = new JScrollPane(jobCostComparisonTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Info footer
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel infoLabel = new JLabel("Compares estimated vs actual costs for labor, materials, and total per job. Positive variance = over budget.");
+        infoLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        infoLabel.setForeground(Color.GRAY);
+        footerPanel.add(infoLabel);
+        panel.add(footerPanel, BorderLayout.SOUTH);
+        
+        // Load initial data
+        loadJobCostComparisonReport();
+        
+        return panel;
+    }
+    
+    /**
+     * Load job cost comparison report from database
+     */
+    private void loadJobCostComparisonReport() {
+        jobCostComparisonTableModel.setRowCount(0); // Clear existing rows
+        
+        List<JobCostComparisonReport> comparisons = reportDAO.getJobCostComparison();
+        
+        for (JobCostComparisonReport comp : comparisons) {
+            Object[] row = {
+                comp.getJobId(),
+                comp.getCustomerName(),
+                comp.getDescription(),
+                comp.getStatus(),
+                CURRENCY_FORMATTER.format(comp.getEstimatedLaborCost()),
+                CURRENCY_FORMATTER.format(comp.getActualLaborCost()),
+                String.format("%.1f%%", comp.getLaborVariancePercent()),
+                CURRENCY_FORMATTER.format(comp.getEstimatedMaterialCost()),
+                CURRENCY_FORMATTER.format(comp.getActualMaterialCost()),
+                String.format("%.1f%%", comp.getMaterialVariancePercent()),
+                CURRENCY_FORMATTER.format(comp.getEstimatedTotalCost()),
+                CURRENCY_FORMATTER.format(comp.getActualTotalCost()),
+                String.format("%.1f%%", comp.getTotalVariancePercent())
+            };
+            jobCostComparisonTableModel.addRow(row);
+        }
+        
+        logger.info("Loaded " + comparisons.size() + " job cost comparisons into table");
+    }
+    
+    /**
      * Refresh all reports
      */
     public void refreshReports() {
@@ -592,6 +733,7 @@ public class ReportsPanel extends JPanel {
         loadEmployeeLaborReport();
         loadUnpaidInvoicesReport();
         loadVendorSpendingReport();
+        loadJobCostComparisonReport();
         logger.info("All reports refreshed");
     }
 }
