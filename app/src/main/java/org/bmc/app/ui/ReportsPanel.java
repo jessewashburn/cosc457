@@ -6,6 +6,7 @@ import org.bmc.app.dao.ReportDAO.MaterialShortageReport;
 import org.bmc.app.dao.ReportDAO.TopCustomerReport;
 import org.bmc.app.dao.ReportDAO.EmployeeLaborReport;
 import org.bmc.app.dao.ReportDAO.UnpaidInvoiceReport;
+import org.bmc.app.dao.ReportDAO.VendorSpendingReport;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -47,6 +48,10 @@ public class ReportsPanel extends JPanel {
     private JTable unpaidInvoicesTable;
     private DefaultTableModel unpaidInvoicesTableModel;
     
+    // Vendor Spending Report Components
+    private JTable vendorSpendingTable;
+    private DefaultTableModel vendorSpendingTableModel;
+    
     public ReportsPanel() {
         this.reportDAO = new ReportDAO();
         setLayout(new BorderLayout(10, 10));
@@ -66,6 +71,7 @@ public class ReportsPanel extends JPanel {
         reportTabs.addTab("Material Shortages", createMaterialShortagesPanel());
         reportTabs.addTab("Employee Labor", createEmployeeLaborPanel());
         reportTabs.addTab("Unpaid Invoices (30+ Days)", createUnpaidInvoicesPanel());
+        reportTabs.addTab("Vendor Spending by Month", createVendorSpendingPanel());
         
         add(reportTabs, BorderLayout.CENTER);
     }
@@ -495,6 +501,88 @@ public class ReportsPanel extends JPanel {
     }
     
     /**
+     * Create the Vendor Spending by Month report panel
+     */
+    private JPanel createVendorSpendingPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("Vendor Spending by Month");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> loadVendorSpendingReport());
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Table
+        String[] columns = {"Vendor ID", "Vendor Name", "Contact", "Year", "Month", "Total Spending", "PO Count"};
+        vendorSpendingTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        vendorSpendingTable = new JTable(vendorSpendingTableModel);
+        vendorSpendingTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        vendorSpendingTable.getTableHeader().setReorderingAllowed(false);
+        
+        // Set column widths
+        vendorSpendingTable.getColumnModel().getColumn(0).setPreferredWidth(70);  // Vendor ID
+        vendorSpendingTable.getColumnModel().getColumn(1).setPreferredWidth(150); // Vendor Name
+        vendorSpendingTable.getColumnModel().getColumn(2).setPreferredWidth(150); // Contact
+        vendorSpendingTable.getColumnModel().getColumn(3).setPreferredWidth(60);  // Year
+        vendorSpendingTable.getColumnModel().getColumn(4).setPreferredWidth(80);  // Month
+        vendorSpendingTable.getColumnModel().getColumn(5).setPreferredWidth(120); // Total Spending
+        vendorSpendingTable.getColumnModel().getColumn(6).setPreferredWidth(80);  // PO Count
+        
+        JScrollPane scrollPane = new JScrollPane(vendorSpendingTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Info footer
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel infoLabel = new JLabel("Shows total spending per vendor by month (excludes cancelled orders)");
+        infoLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        infoLabel.setForeground(Color.GRAY);
+        footerPanel.add(infoLabel);
+        panel.add(footerPanel, BorderLayout.SOUTH);
+        
+        // Load initial data
+        loadVendorSpendingReport();
+        
+        return panel;
+    }
+    
+    /**
+     * Load vendor spending report from database
+     */
+    private void loadVendorSpendingReport() {
+        vendorSpendingTableModel.setRowCount(0); // Clear existing rows
+        
+        List<VendorSpendingReport> spending = reportDAO.getVendorSpendingByMonth();
+        
+        for (VendorSpendingReport record : spending) {
+            Object[] row = {
+                record.getVendorId(),
+                record.getVendorName(),
+                record.getVendorContact() != null ? record.getVendorContact() : "",
+                record.getYear(),
+                record.getMonthName(),
+                record.getTotalSpending() != null ? CURRENCY_FORMATTER.format(record.getTotalSpending()) : "$0.00",
+                record.getPurchaseOrderCount()
+            };
+            vendorSpendingTableModel.addRow(row);
+        }
+        
+        logger.info("Loaded " + spending.size() + " vendor spending records into table");
+    }
+    
+    /**
      * Refresh all reports
      */
     public void refreshReports() {
@@ -503,6 +591,7 @@ public class ReportsPanel extends JPanel {
         loadMaterialShortagesReport();
         loadEmployeeLaborReport();
         loadUnpaidInvoicesReport();
+        loadVendorSpendingReport();
         logger.info("All reports refreshed");
     }
 }

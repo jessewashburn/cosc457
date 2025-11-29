@@ -21,8 +21,11 @@ public class MaterialDAO {
 
     public List<Material> findAll() {
         List<Material> materials = new ArrayList<>();
-        String sql = "SELECT material_id, name, category, stock_quantity, reorder_level, unit_cost " +
-                     "FROM Material ORDER BY name";
+        String sql = "SELECT m.material_id, m.name, m.category, m.stock_quantity, m.reorder_level, " +
+                     "m.unit_cost, m.vendor_id, v.name AS vendor_name " +
+                     "FROM Material m " +
+                     "LEFT JOIN Vendor v ON m.vendor_id = v.vendor_id " +
+                     "ORDER BY m.name";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -39,8 +42,11 @@ public class MaterialDAO {
     }
 
     public Material findById(Integer id) {
-        String sql = "SELECT material_id, name, category, stock_quantity, reorder_level, unit_cost " +
-                     "FROM Material WHERE material_id = ?";
+        String sql = "SELECT m.material_id, m.name, m.category, m.stock_quantity, m.reorder_level, " +
+                     "m.unit_cost, m.vendor_id, v.name AS vendor_name " +
+                     "FROM Material m " +
+                     "LEFT JOIN Vendor v ON m.vendor_id = v.vendor_id " +
+                     "WHERE m.material_id = ?";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -58,8 +64,12 @@ public class MaterialDAO {
 
     public List<Material> findLowStock() {
         List<Material> lowStockMaterials = new ArrayList<>();
-        String sql = "SELECT material_id, name, category, stock_quantity, reorder_level, unit_cost " +
-                     "FROM Material WHERE stock_quantity <= reorder_level ORDER BY stock_quantity";
+        String sql = "SELECT m.material_id, m.name, m.category, m.stock_quantity, m.reorder_level, " +
+                     "m.unit_cost, m.vendor_id, v.name AS vendor_name " +
+                     "FROM Material m " +
+                     "LEFT JOIN Vendor v ON m.vendor_id = v.vendor_id " +
+                     "WHERE m.stock_quantity <= m.reorder_level " +
+                     "ORDER BY m.stock_quantity";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -76,8 +86,8 @@ public class MaterialDAO {
     }
 
     public boolean save(Material material) {
-        String sql = "INSERT INTO Material (name, category, stock_quantity, reorder_level, unit_cost) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Material (name, category, stock_quantity, reorder_level, unit_cost, vendor_id) " +
+                     "VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -86,6 +96,11 @@ public class MaterialDAO {
             stmt.setInt(3, material.getStockQuantity() != null ? material.getStockQuantity() : 0);
             stmt.setInt(4, material.getReorderLevel() != null ? material.getReorderLevel() : 5);
             stmt.setBigDecimal(5, material.getUnitCost());
+            if (material.getVendorId() != null) {
+                stmt.setInt(6, material.getVendorId());
+            } else {
+                stmt.setNull(6, Types.INTEGER);
+            }
             
             int rowsAffected = stmt.executeUpdate();
             
@@ -106,7 +121,7 @@ public class MaterialDAO {
 
     public boolean update(Material material) {
         String sql = "UPDATE Material SET name = ?, category = ?, stock_quantity = ?, " +
-                     "reorder_level = ?, unit_cost = ? WHERE material_id = ?";
+                     "reorder_level = ?, unit_cost = ?, vendor_id = ? WHERE material_id = ?";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -115,7 +130,12 @@ public class MaterialDAO {
             stmt.setInt(3, material.getStockQuantity() != null ? material.getStockQuantity() : 0);
             stmt.setInt(4, material.getReorderLevel() != null ? material.getReorderLevel() : 5);
             stmt.setBigDecimal(5, material.getUnitCost());
-            stmt.setInt(6, material.getMaterialId());
+            if (material.getVendorId() != null) {
+                stmt.setInt(6, material.getVendorId());
+            } else {
+                stmt.setNull(6, Types.INTEGER);
+            }
+            stmt.setInt(7, material.getMaterialId());
             
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -147,8 +167,12 @@ public class MaterialDAO {
 
     public List<Material> search(String keyword) {
         List<Material> materials = new ArrayList<>();
-        String sql = "SELECT material_id, name, category, stock_quantity, reorder_level, unit_cost " +
-                     "FROM Material WHERE name LIKE ? OR category LIKE ? ORDER BY name";
+        String sql = "SELECT m.material_id, m.name, m.category, m.stock_quantity, m.reorder_level, " +
+                     "m.unit_cost, m.vendor_id, v.name AS vendor_name " +
+                     "FROM Material m " +
+                     "LEFT JOIN Vendor v ON m.vendor_id = v.vendor_id " +
+                     "WHERE m.name LIKE ? OR m.category LIKE ? " +
+                     "ORDER BY m.name";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -176,6 +200,11 @@ public class MaterialDAO {
         material.setStockQuantity(rs.getInt("stock_quantity"));
         material.setReorderLevel(rs.getInt("reorder_level"));
         material.setUnitCost(rs.getBigDecimal("unit_cost"));
+        int vendorId = rs.getInt("vendor_id");
+        if (!rs.wasNull()) {
+            material.setVendorId(vendorId);
+        }
+        material.setVendorName(rs.getString("vendor_name"));
         return material;
     }
 }

@@ -100,7 +100,9 @@ CREATE TABLE Material (
   category         VARCHAR(100),
   stock_quantity   INT DEFAULT 0,
   reorder_level    INT DEFAULT 5,
-  unit_cost        DECIMAL(10,2)
+  unit_cost        DECIMAL(10,2),
+  vendor_id        INT,
+  FOREIGN KEY (vendor_id) REFERENCES Vendor(vendor_id)
 );
 
 CREATE TABLE JobMaterial (

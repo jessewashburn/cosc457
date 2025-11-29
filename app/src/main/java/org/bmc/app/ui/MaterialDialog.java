@@ -1,10 +1,13 @@
 package org.bmc.app.ui;
 
+import org.bmc.app.dao.VendorDAO;
 import org.bmc.app.model.Material;
+import org.bmc.app.model.Vendor;
 
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Dialog for adding/editing materials
@@ -16,13 +19,16 @@ public class MaterialDialog extends JDialog {
     private JSpinner stockQuantitySpinner;
     private JSpinner reorderLevelSpinner;
     private JTextField unitCostField;
+    private JComboBox<Vendor> vendorComboBox;
     
     private boolean confirmed = false;
     private Material material;
+    private VendorDAO vendorDAO;
 
     public MaterialDialog(Frame parent, Material material) {
         super(parent, material == null ? "Add Material" : "Edit Material", true);
         this.material = material;
+        this.vendorDAO = new VendorDAO();
         initializeComponents();
         if (material != null) {
             populateFields();
@@ -77,6 +83,18 @@ public class MaterialDialog extends JDialog {
         unitCostField.setText("0.00");
         formPanel.add(unitCostField, gbc);
 
+        // Vendor combo box
+        gbc.gridx = 0; gbc.gridy = 5;
+        formPanel.add(new JLabel("Vendor:"), gbc);
+        gbc.gridx = 1;
+        vendorComboBox = new JComboBox<>();
+        vendorComboBox.addItem(null); // Add empty option
+        List<Vendor> vendors = vendorDAO.findAll();
+        for (Vendor vendor : vendors) {
+            vendorComboBox.addItem(vendor);
+        }
+        formPanel.add(vendorComboBox, gbc);
+
         add(formPanel, BorderLayout.CENTER);
 
         // Button panel
@@ -114,6 +132,15 @@ public class MaterialDialog extends JDialog {
             if (material.getUnitCost() != null) {
                 unitCostField.setText(material.getUnitCost().toString());
             }
+            if (material.getVendorId() != null) {
+                for (int i = 0; i < vendorComboBox.getItemCount(); i++) {
+                    Vendor vendor = vendorComboBox.getItemAt(i);
+                    if (vendor != null && vendor.getVendorId().equals(material.getVendorId())) {
+                        vendorComboBox.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -150,6 +177,13 @@ public class MaterialDialog extends JDialog {
         material.setStockQuantity((Integer) stockQuantitySpinner.getValue());
         material.setReorderLevel((Integer) reorderLevelSpinner.getValue());
         material.setUnitCost(new BigDecimal(unitCostField.getText().trim()));
+        
+        Vendor selectedVendor = (Vendor) vendorComboBox.getSelectedItem();
+        if (selectedVendor != null) {
+            material.setVendorId(selectedVendor.getVendorId());
+        } else {
+            material.setVendorId(null);
+        }
     }
 
     public boolean isConfirmed() {

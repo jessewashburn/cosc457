@@ -435,4 +435,86 @@ public class ReportDAO {
         
         return invoices;
     }
+    
+    /**
+     * Represents vendor spending summary by month
+     */
+    public static class VendorSpendingReport {
+        private int vendorId;
+        private String vendorName;
+        private String vendorContact;
+        private int year;
+        private int month;
+        private String monthName;
+        private BigDecimal totalSpending;
+        private int purchaseOrderCount;
+        
+        public VendorSpendingReport(int vendorId, String vendorName, String vendorContact,
+                                    int year, int month, String monthName,
+                                    BigDecimal totalSpending, int purchaseOrderCount) {
+            this.vendorId = vendorId;
+            this.vendorName = vendorName;
+            this.vendorContact = vendorContact;
+            this.year = year;
+            this.month = month;
+            this.monthName = monthName;
+            this.totalSpending = totalSpending;
+            this.purchaseOrderCount = purchaseOrderCount;
+        }
+        
+        public int getVendorId() { return vendorId; }
+        public String getVendorName() { return vendorName; }
+        public String getVendorContact() { return vendorContact; }
+        public int getYear() { return year; }
+        public int getMonth() { return month; }
+        public String getMonthName() { return monthName; }
+        public BigDecimal getTotalSpending() { return totalSpending; }
+        public int getPurchaseOrderCount() { return purchaseOrderCount; }
+    }
+    
+    /**
+     * Get vendor spending summarized by month
+     */
+    public List<VendorSpendingReport> getVendorSpendingByMonth() {
+        List<VendorSpendingReport> spending = new ArrayList<>();
+        
+        String sql = "SELECT v.vendor_id, v.name AS vendor_name, v.contact_info, " +
+                     "YEAR(po.order_date) AS year, MONTH(po.order_date) AS month, " +
+                     "DATE_FORMAT(po.order_date, '%M') AS month_name, " +
+                     "SUM(po.total_cost) AS total_spending, " +
+                     "COUNT(po.po_id) AS purchase_order_count " +
+                     "FROM Vendor v " +
+                     "JOIN PurchaseOrder po ON v.vendor_id = po.vendor_id " +
+                     "WHERE po.status != 'Cancelled' " +
+                     "GROUP BY v.vendor_id, v.name, v.contact_info, YEAR(po.order_date), MONTH(po.order_date) " +
+                     "ORDER BY year DESC, month DESC, total_spending DESC";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                int vendorId = rs.getInt("vendor_id");
+                String vendorName = rs.getString("vendor_name");
+                String vendorContact = rs.getString("contact_info");
+                int year = rs.getInt("year");
+                int month = rs.getInt("month");
+                String monthName = rs.getString("month_name");
+                BigDecimal totalSpending = rs.getBigDecimal("total_spending");
+                int purchaseOrderCount = rs.getInt("purchase_order_count");
+                
+                spending.add(new VendorSpendingReport(vendorId, vendorName, vendorContact,
+                                                       year, month, monthName,
+                                                       totalSpending, purchaseOrderCount));
+            }
+            
+            logger.info("Found " + spending.size() + " vendor spending records by month");
+            
+        } catch (SQLException e) {
+            logger.severe("Error fetching vendor spending by month: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return spending;
+    }
 }

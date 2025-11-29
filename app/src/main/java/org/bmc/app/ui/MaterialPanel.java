@@ -73,7 +73,7 @@ public class MaterialPanel extends JPanel {
         toolbarPanel.add(searchPanel);
 
         // Table
-        String[] columns = {"ID", "Name", "Category", "Stock Qty", "Reorder Level", "Unit Cost"};
+        String[] columns = {"ID", "Name", "Category", "Vendor", "Stock Qty", "Reorder Level", "Unit Cost"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -120,6 +120,7 @@ public class MaterialPanel extends JPanel {
                 material.getMaterialId(),
                 material.getName(),
                 material.getCategory(),
+                material.getVendorName() != null ? material.getVendorName() : "",
                 material.getStockQuantity(),
                 material.getReorderLevel(),
                 String.format("$%.2f", material.getUnitCost())

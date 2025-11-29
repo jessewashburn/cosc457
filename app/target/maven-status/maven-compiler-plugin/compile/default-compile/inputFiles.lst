@@ -16,8 +16,10 @@ C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\test\DatabaseConnectionTest
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\JobPanel.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\MaterialPanel.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\EmployeeDialog.java
+C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\dao\VendorDAO.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\MaterialDialog.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\dao\ReportDAO.java
+C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\model\Vendor.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\test\SimpleModelTest.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\MainFrame.java
 C:\Users\jesse\cosc457\app\src\main\java\org\bmc\app\ui\JobDialog.java

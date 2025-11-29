@@ -13,6 +13,8 @@ public class Material {
     private Integer stockQuantity;
     private Integer reorderLevel;
     private BigDecimal unitCost;
+    private Integer vendorId;
+    private String vendorName;
 
     public Material() {
     }
@@ -25,6 +27,19 @@ public class Material {
         this.stockQuantity = stockQuantity;
         this.reorderLevel = reorderLevel;
         this.unitCost = unitCost;
+    }
+
+    public Material(Integer materialId, String name, String category, 
+                   Integer stockQuantity, Integer reorderLevel, BigDecimal unitCost,
+                   Integer vendorId, String vendorName) {
+        this.materialId = materialId;
+        this.name = name;
+        this.category = category;
+        this.stockQuantity = stockQuantity;
+        this.reorderLevel = reorderLevel;
+        this.unitCost = unitCost;
+        this.vendorId = vendorId;
+        this.vendorName = vendorName;
     }
 
     public Integer getMaterialId() {
@@ -75,6 +90,22 @@ public class Material {
         this.unitCost = unitCost;
     }
 
+    public Integer getVendorId() {
+        return vendorId;
+    }
+
+    public void setVendorId(Integer vendorId) {
+        this.vendorId = vendorId;
+    }
+
+    public String getVendorName() {
+        return vendorName;
+    }
+
+    public void setVendorName(String vendorName) {
+        this.vendorName = vendorName;
+    }
+
     public boolean isLowStock() {
         return stockQuantity != null && reorderLevel != null 
                && stockQuantity <= reorderLevel;
@@ -89,6 +120,8 @@ public class Material {
                 ", stockQuantity=" + stockQuantity +
                 ", reorderLevel=" + reorderLevel +
                 ", unitCost=" + unitCost +
+                ", vendorId=" + vendorId +
+                ", vendorName='" + vendorName + '\'' +
                 '}';
     }
 }
