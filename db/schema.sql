@@ -25,7 +25,8 @@ CREATE TABLE Employee (
   name             VARCHAR(100) NOT NULL,
   role             ENUM('restorer','fabricator','admin') NOT NULL,
   specialization   VARCHAR(100),
-  contact_info     VARCHAR(150)
+  contact_info     VARCHAR(150),
+  hourly_rate      DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Hourly pay rate for labor cost calculations'
 );
 
 -- ===========================================================

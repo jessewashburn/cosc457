@@ -357,4 +357,82 @@ public class ReportDAO {
         
         return null;
     }
+    
+    /**
+     * Represents unpaid invoice aging report
+     */
+    public static class UnpaidInvoiceReport {
+        private int invoiceId;
+        private int jobId;
+        private String customerName;
+        private String jobDescription;
+        private LocalDate invoiceDate;
+        private BigDecimal totalAmount;
+        private long daysOutstanding;
+        
+        public UnpaidInvoiceReport(int invoiceId, int jobId, String customerName,
+                                   String jobDescription, LocalDate invoiceDate,
+                                   BigDecimal totalAmount, long daysOutstanding) {
+            this.invoiceId = invoiceId;
+            this.jobId = jobId;
+            this.customerName = customerName;
+            this.jobDescription = jobDescription;
+            this.invoiceDate = invoiceDate;
+            this.totalAmount = totalAmount;
+            this.daysOutstanding = daysOutstanding;
+        }
+        
+        public int getInvoiceId() { return invoiceId; }
+        public int getJobId() { return jobId; }
+        public String getCustomerName() { return customerName; }
+        public String getJobDescription() { return jobDescription; }
+        public LocalDate getInvoiceDate() { return invoiceDate; }
+        public BigDecimal getTotalAmount() { return totalAmount; }
+        public long getDaysOutstanding() { return daysOutstanding; }
+    }
+    
+    /**
+     * Get unpaid invoices older than 30 days
+     */
+    public List<UnpaidInvoiceReport> getUnpaidInvoicesOlderThan30Days() {
+        List<UnpaidInvoiceReport> invoices = new ArrayList<>();
+        
+        String sql = "SELECT i.invoice_id, i.job_id, c.name AS customer_name, " +
+                     "j.description AS job_description, i.invoice_date, i.total_amount, " +
+                     "DATEDIFF(CURDATE(), i.invoice_date) AS days_outstanding " +
+                     "FROM Invoice i " +
+                     "JOIN Job j ON i.job_id = j.job_id " +
+                     "JOIN Customer c ON j.customer_id = c.customer_id " +
+                     "WHERE i.paid = FALSE " +
+                     "AND DATEDIFF(CURDATE(), i.invoice_date) > 30 " +
+                     "ORDER BY days_outstanding DESC, i.invoice_date ASC";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                int invoiceId = rs.getInt("invoice_id");
+                int jobId = rs.getInt("job_id");
+                String customerName = rs.getString("customer_name");
+                String jobDescription = rs.getString("job_description");
+                Date invoiceDateSql = rs.getDate("invoice_date");
+                LocalDate invoiceDate = invoiceDateSql != null ? invoiceDateSql.toLocalDate() : null;
+                BigDecimal totalAmount = rs.getBigDecimal("total_amount");
+                long daysOutstanding = rs.getLong("days_outstanding");
+                
+                invoices.add(new UnpaidInvoiceReport(invoiceId, jobId, customerName,
+                                                      jobDescription, invoiceDate,
+                                                      totalAmount, daysOutstanding));
+            }
+            
+            logger.info("Found " + invoices.size() + " unpaid invoices older than 30 days");
+            
+        } catch (SQLException e) {
+            logger.severe("Error fetching unpaid invoices: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return invoices;
+    }
 }

@@ -5,6 +5,7 @@ import org.bmc.app.dao.ReportDAO.JobDueSoonReport;
 import org.bmc.app.dao.ReportDAO.MaterialShortageReport;
 import org.bmc.app.dao.ReportDAO.TopCustomerReport;
 import org.bmc.app.dao.ReportDAO.EmployeeLaborReport;
+import org.bmc.app.dao.ReportDAO.UnpaidInvoiceReport;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -42,6 +43,10 @@ public class ReportsPanel extends JPanel {
     private JTable employeeLaborTable;
     private DefaultTableModel employeeLaborTableModel;
     
+    // Unpaid Invoices Report Components
+    private JTable unpaidInvoicesTable;
+    private DefaultTableModel unpaidInvoicesTableModel;
+    
     public ReportsPanel() {
         this.reportDAO = new ReportDAO();
         setLayout(new BorderLayout(10, 10));
@@ -60,6 +65,7 @@ public class ReportsPanel extends JPanel {
         reportTabs.addTab("Top Customers", createTopCustomersPanel());
         reportTabs.addTab("Material Shortages", createMaterialShortagesPanel());
         reportTabs.addTab("Employee Labor", createEmployeeLaborPanel());
+        reportTabs.addTab("Unpaid Invoices (30+ Days)", createUnpaidInvoicesPanel());
         
         add(reportTabs, BorderLayout.CENTER);
     }
@@ -407,6 +413,88 @@ public class ReportsPanel extends JPanel {
     }
     
     /**
+     * Create the Unpaid Invoices (30+ Days) report panel
+     */
+    private JPanel createUnpaidInvoicesPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("Unpaid Invoices (30+ Days Overdue)");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> loadUnpaidInvoicesReport());
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Table
+        String[] columns = {"Invoice ID", "Job ID", "Customer", "Job Description", "Invoice Date", "Amount", "Days Overdue"};
+        unpaidInvoicesTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        unpaidInvoicesTable = new JTable(unpaidInvoicesTableModel);
+        unpaidInvoicesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        unpaidInvoicesTable.getTableHeader().setReorderingAllowed(false);
+        
+        // Set column widths
+        unpaidInvoicesTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Invoice ID
+        unpaidInvoicesTable.getColumnModel().getColumn(1).setPreferredWidth(60);  // Job ID
+        unpaidInvoicesTable.getColumnModel().getColumn(2).setPreferredWidth(150); // Customer
+        unpaidInvoicesTable.getColumnModel().getColumn(3).setPreferredWidth(200); // Job Description
+        unpaidInvoicesTable.getColumnModel().getColumn(4).setPreferredWidth(100); // Invoice Date
+        unpaidInvoicesTable.getColumnModel().getColumn(5).setPreferredWidth(100); // Amount
+        unpaidInvoicesTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Days Overdue
+        
+        JScrollPane scrollPane = new JScrollPane(unpaidInvoicesTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Info footer
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel infoLabel = new JLabel("Shows all unpaid invoices that are more than 30 days old");
+        infoLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        infoLabel.setForeground(Color.GRAY);
+        footerPanel.add(infoLabel);
+        panel.add(footerPanel, BorderLayout.SOUTH);
+        
+        // Load initial data
+        loadUnpaidInvoicesReport();
+        
+        return panel;
+    }
+    
+    /**
+     * Load unpaid invoices report from database
+     */
+    private void loadUnpaidInvoicesReport() {
+        unpaidInvoicesTableModel.setRowCount(0); // Clear existing rows
+        
+        List<UnpaidInvoiceReport> invoices = reportDAO.getUnpaidInvoicesOlderThan30Days();
+        
+        for (UnpaidInvoiceReport invoice : invoices) {
+            Object[] row = {
+                invoice.getInvoiceId(),
+                invoice.getJobId(),
+                invoice.getCustomerName(),
+                invoice.getJobDescription(),
+                invoice.getInvoiceDate() != null ? DATE_FORMATTER.format(invoice.getInvoiceDate()) : "",
+                invoice.getTotalAmount() != null ? CURRENCY_FORMATTER.format(invoice.getTotalAmount()) : "$0.00",
+                invoice.getDaysOutstanding()
+            };
+            unpaidInvoicesTableModel.addRow(row);
+        }
+        
+        logger.info("Loaded " + invoices.size() + " unpaid invoices into table");
+    }
+    
+    /**
      * Refresh all reports
      */
     public void refreshReports() {
@@ -414,6 +502,7 @@ public class ReportsPanel extends JPanel {
         loadTopCustomersReport();
         loadMaterialShortagesReport();
         loadEmployeeLaborReport();
+        loadUnpaidInvoicesReport();
         logger.info("All reports refreshed");
     }
 }
