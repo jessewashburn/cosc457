@@ -105,7 +105,7 @@ public class JobPanel extends JPanel {
     }
     
     private void createTable() {
-        String[] columnNames = {"Job ID", "Customer ID", "Description", "Status", "Start Date", "Due Date", "Estimated Cost"};
+        String[] columnNames = {"Job ID", "Customer", "Employee", "Description", "Status", "Start Date", "Due Date", "Estimated Cost"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -163,14 +163,24 @@ public class JobPanel extends JPanel {
         tableModel.setRowCount(0); // Clear existing data
         
         for (Job job : jobs) {
+            // Calculate total estimated cost from labor + material
+            java.math.BigDecimal totalEstimate = java.math.BigDecimal.ZERO;
+            if (job.getEstimatedLaborCost() != null) {
+                totalEstimate = totalEstimate.add(job.getEstimatedLaborCost());
+            }
+            if (job.getEstimatedMaterialCost() != null) {
+                totalEstimate = totalEstimate.add(job.getEstimatedMaterialCost());
+            }
+            
             Object[] row = {
                 job.getJobId(),
-                job.getCustomerId(),
+                job.getCustomerName() != null ? job.getCustomerName() : job.getCustomerId(),
+                job.getEmployeeName() != null ? job.getEmployeeName() : (job.getEmployeeId() != null ? job.getEmployeeId().toString() : "(None)"),
                 job.getDescription(),
                 job.getStatus().toString(),
                 job.getStartDate(),
                 job.getDueDate(),
-                String.format("$%.2f", job.getEstimatedValue())
+                String.format("$%.2f", totalEstimate)
             };
             tableModel.addRow(row);
         }

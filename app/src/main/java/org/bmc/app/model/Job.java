@@ -48,6 +48,7 @@ public class Job {
     
     private Integer jobId;
     private Integer customerId;
+    private Integer employeeId;
     private Integer quoteId;
     private String description;
     private LocalDate startDate;
@@ -58,6 +59,7 @@ public class Job {
     
     // Additional fields for display purposes (not stored in Job table)
     private String customerName;
+    private String employeeName;
     private BigDecimal estimatedValue;
     
     /**
@@ -138,6 +140,14 @@ public class Job {
         this.quoteId = quoteId;
     }
     
+    public Integer getEmployeeId() {
+        return employeeId;
+    }
+    
+    public void setEmployeeId(Integer employeeId) {
+        this.employeeId = employeeId;
+    }
+    
     public String getDescription() {
         return description;
     }
@@ -176,6 +186,14 @@ public class Job {
     
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+    
+    public String getEmployeeName() {
+        return employeeName;
+    }
+    
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
     
     public BigDecimal getEstimatedValue() {

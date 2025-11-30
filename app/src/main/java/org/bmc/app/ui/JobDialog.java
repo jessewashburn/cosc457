@@ -1,9 +1,11 @@
 package org.bmc.app.ui;
 
 import org.bmc.app.dao.CustomerDAO;
+import org.bmc.app.dao.EmployeeDAO;
 import org.bmc.app.dao.JobDAO;
 import org.bmc.app.dao.PhotoDAO;
 import org.bmc.app.model.Customer;
+import org.bmc.app.model.Employee;
 import org.bmc.app.model.Job;
 import org.bmc.app.model.Photo;
 import org.bmc.app.util.PhotoStorageUtil;
@@ -34,11 +36,13 @@ public class JobDialog extends JDialog {
     
     private final JobDAO jobDAO;
     private final CustomerDAO customerDAO;
+    private final EmployeeDAO employeeDAO;
     private final PhotoDAO photoDAO;
     private final Job job;
     private boolean saved;
     
     private JComboBox<CustomerItem> customerCombo;
+    private JComboBox<EmployeeItem> employeeCombo;
     private JTextArea descriptionArea;
     private JComboBox<Job.Status> statusCombo;
     private JTextField startDateField;
@@ -66,10 +70,29 @@ public class JobDialog extends JDialog {
         }
     }
     
+    /**
+     * Wrapper class for displaying employee information in combo box.
+     */
+    private static class EmployeeItem {
+        final Integer id;
+        final String name;
+        
+        EmployeeItem(Integer id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+        
+        @Override
+        public String toString() {
+            return name != null ? name : "(None)";
+        }
+    }
+    
     public JobDialog(Frame parent, Job job) {
         super(parent, job == null ? "Add Job" : "Edit Job", true);
         this.jobDAO = new JobDAO();
         this.customerDAO = new CustomerDAO();
+        this.employeeDAO = new EmployeeDAO();
         this.photoDAO = new PhotoDAO();
         this.job = job;
         this.saved = false;
@@ -78,6 +101,7 @@ public class JobDialog extends JDialog {
         initializeComponents();
         layoutComponents();
         loadCustomers();
+        loadEmployees();
         
         if (job != null) {
             populateFields();
@@ -90,6 +114,7 @@ public class JobDialog extends JDialog {
     
     private void initializeComponents() {
         customerCombo = new JComboBox<>();
+        employeeCombo = new JComboBox<>();
         descriptionArea = new JTextArea(DESC_ROWS, DESC_COLS);
         descriptionArea.setLineWrap(true);
         descriptionArea.setWrapStyleWord(true);
@@ -125,8 +150,9 @@ public class JobDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
         addFormRow(panel, gbc, 0, "Customer:", customerCombo);
+        addFormRow(panel, gbc, 1, "Assigned To:", employeeCombo);
         
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         gbc.gridx = 0;
         gbc.anchor = GridBagConstraints.NORTHEAST;
         panel.add(new JLabel("Description:"), gbc);
@@ -134,11 +160,11 @@ public class JobDialog extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
         panel.add(new JScrollPane(descriptionArea), gbc);
         
-        addFormRow(panel, gbc, 2, "Status:", statusCombo);
-        addFormRow(panel, gbc, 3, "Start Date:", createDatePanel(startDateField));
-        addFormRow(panel, gbc, 4, "Due Date:", createDatePanel(dueDateField));
-        addFormRow(panel, gbc, 5, "Est. Labor Cost:", estimatedLaborCostField);
-        addFormRow(panel, gbc, 6, "Est. Material Cost:", estimatedMaterialCostField);
+        addFormRow(panel, gbc, 3, "Status:", statusCombo);
+        addFormRow(panel, gbc, 4, "Start Date:", createDatePanel(startDateField));
+        addFormRow(panel, gbc, 5, "Due Date:", createDatePanel(dueDateField));
+        addFormRow(panel, gbc, 6, "Est. Labor Cost:", estimatedLaborCostField);
+        addFormRow(panel, gbc, 7, "Est. Material Cost:", estimatedMaterialCostField);
         
         return panel;
     }
@@ -188,6 +214,19 @@ public class JobDialog extends JDialog {
         }
     }
     
+    private void loadEmployees() {
+        try {
+            List<Employee> employees = employeeDAO.findAll();
+            employeeCombo.removeAllItems();
+            employeeCombo.addItem(new EmployeeItem(null, "(None)"));
+            for (Employee e : employees) {
+                employeeCombo.addItem(new EmployeeItem(e.getEmployeeId(), e.getName()));
+            }
+        } catch (Exception e) {
+            showErrorDialog("Error loading employees: " + e.getMessage());
+        }
+    }
+    
     private void populateFields() {
         for (int i = 0; i < customerCombo.getItemCount(); i++) {
             CustomerItem item = customerCombo.getItemAt(i);
@@ -195,6 +234,19 @@ public class JobDialog extends JDialog {
                 customerCombo.setSelectedIndex(i);
                 break;
             }
+        }
+        
+        // Set employee selection
+        if (job.getEmployeeId() != null) {
+            for (int i = 0; i < employeeCombo.getItemCount(); i++) {
+                EmployeeItem item = employeeCombo.getItemAt(i);
+                if (item.id != null && item.id.equals(job.getEmployeeId())) {
+                    employeeCombo.setSelectedIndex(i);
+                    break;
+                }
+            }
+        } else {
+            employeeCombo.setSelectedIndex(0); // Select "(None)"
         }
         
         descriptionArea.setText(job.getDescription());
@@ -259,6 +311,8 @@ public class JobDialog extends JDialog {
     }
     
     private void createNewJob(Integer customerId, LocalDate startDate, LocalDate dueDate) throws Exception {
+        EmployeeItem selectedEmployee = (EmployeeItem) employeeCombo.getSelectedItem();
+        
         Job newJob = new Job(
             customerId,
             null,
@@ -269,11 +323,15 @@ public class JobDialog extends JDialog {
             parseEstimatedLaborCost(),
             parseEstimatedMaterialCost()
         );
+        newJob.setEmployeeId(selectedEmployee != null ? selectedEmployee.id : null);
         jobDAO.create(newJob);
     }
     
     private void updateExistingJob(Integer customerId, LocalDate startDate, LocalDate dueDate) throws Exception {
+        EmployeeItem selectedEmployee = (EmployeeItem) employeeCombo.getSelectedItem();
+        
         job.setCustomerId(customerId);
+        job.setEmployeeId(selectedEmployee != null ? selectedEmployee.id : null);
         job.setDescription(descriptionArea.getText().trim());
         job.setStartDate(startDate);
         job.setDueDate(dueDate);
