@@ -4,6 +4,7 @@ import org.bmc.app.dao.MaterialDAO;
 import org.bmc.app.model.Material;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -86,6 +87,36 @@ public class MaterialPanel extends JPanel {
         materialTable.setAutoCreateRowSorter(true);
         sorter = new TableRowSorter<>(tableModel);
         materialTable.setRowSorter(sorter);
+        
+        // Custom renderer to highlight low stock items in red
+        materialTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                          boolean isSelected, boolean hasFocus,
+                                                          int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                if (!isSelected) {
+                    // Get stock quantity and reorder level from the table
+                    int modelRow = table.convertRowIndexToModel(row);
+                    Integer stockQty = (Integer) table.getModel().getValueAt(modelRow, 4);
+                    Integer reorderLevel = (Integer) table.getModel().getValueAt(modelRow, 5);
+                    
+                    if (stockQty != null && reorderLevel != null && stockQty <= reorderLevel) {
+                        c.setBackground(new Color(255, 200, 200)); // Light red
+                        c.setForeground(Color.BLACK);
+                    } else {
+                        c.setBackground(Color.WHITE);
+                        c.setForeground(Color.BLACK);
+                    }
+                } else {
+                    c.setBackground(table.getSelectionBackground());
+                    c.setForeground(table.getSelectionForeground());
+                }
+                
+                return c;
+            }
+        });
 
         // Double-click to edit
         materialTable.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -126,12 +157,6 @@ public class MaterialPanel extends JPanel {
                 String.format("$%.2f", material.getUnitCost())
             };
             tableModel.addRow(row);
-            
-            // Highlight low stock rows in red
-            if (material.isLowStock()) {
-                int rowIndex = tableModel.getRowCount() - 1;
-                // Note: Row coloring would require custom TableCellRenderer
-            }
         }
     }
 
