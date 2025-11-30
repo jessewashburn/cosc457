@@ -738,7 +738,7 @@ public class ReportsPanel extends JPanel {
         
         // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
-        JLabel titleLabel = new JLabel("Repeat Customers (>3 Completed Jobs)");
+        JLabel titleLabel = new JLabel("Repeat Customers (>1 Completed Jobs)");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
         headerPanel.add(titleLabel, BorderLayout.WEST);
         

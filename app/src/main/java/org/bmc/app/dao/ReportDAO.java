@@ -824,7 +824,7 @@ public class ReportDAO {
             "LEFT JOIN Invoice i ON j.job_id = i.job_id " +
             "WHERE j.status = 'Completed' " +
             "GROUP BY c.customer_id, c.name " +
-            "HAVING COUNT(j.job_id) > 3 " +
+            "HAVING COUNT(j.job_id) > 1 " +
             "ORDER BY completed_job_count DESC, total_revenue DESC";
         
         try (Connection conn = DBConnection.getConnection();
