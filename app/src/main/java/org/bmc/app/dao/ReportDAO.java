@@ -586,6 +586,7 @@ public class ReportDAO {
     /**
      * Compare estimated vs actual costs per job (labor + materials + total).
      * Calculates variance and percentage difference for each category.
+     * Uses invoice breakdown for actual costs instead of WorkLog/JobMaterial.
      * Only includes jobs that have either estimated or actual costs.
      */
     public List<JobCostComparisonReport> getJobCostComparison() {
@@ -599,14 +600,11 @@ public class ReportDAO {
             "    j.status, " +
             "    COALESCE(j.estimated_labor_cost, 0) AS estimated_labor_cost, " +
             "    COALESCE(j.estimated_material_cost, 0) AS estimated_material_cost, " +
-            "    COALESCE(SUM(w.hours_worked * e.hourly_rate), 0) AS actual_labor_cost, " +
-            "    COALESCE(SUM(jm.quantity_used * m.unit_cost), 0) AS actual_material_cost " +
+            "    COALESCE(SUM(i.labor_cost), 0) AS actual_labor_cost, " +
+            "    COALESCE(SUM(i.material_cost), 0) AS actual_material_cost " +
             "FROM Job j " +
             "INNER JOIN Customer c ON j.customer_id = c.customer_id " +
-            "LEFT JOIN WorkLog w ON j.job_id = w.job_id " +
-            "LEFT JOIN Employee e ON w.employee_id = e.employee_id " +
-            "LEFT JOIN JobMaterial jm ON j.job_id = jm.job_id " +
-            "LEFT JOIN Material m ON jm.material_id = m.material_id " +
+            "LEFT JOIN Invoice i ON j.job_id = i.job_id " +
             "GROUP BY j.job_id, c.name, j.description, j.status, j.estimated_labor_cost, j.estimated_material_cost " +
             "HAVING (j.estimated_labor_cost > 0 OR actual_labor_cost > 0 OR j.estimated_material_cost > 0 OR actual_material_cost > 0) " +
             "ORDER BY j.job_id";

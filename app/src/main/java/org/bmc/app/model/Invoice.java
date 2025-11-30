@@ -14,6 +14,8 @@ public class Invoice {
     private Integer invoiceId;
     private Integer jobId;
     private LocalDate invoiceDate;
+    private BigDecimal laborCost;
+    private BigDecimal materialCost;
     private BigDecimal totalAmount;
     private Boolean paid;
     
@@ -88,6 +90,22 @@ public class Invoice {
     
     public void setInvoiceDate(LocalDate invoiceDate) {
         this.invoiceDate = invoiceDate;
+    }
+    
+    public BigDecimal getLaborCost() {
+        return laborCost;
+    }
+    
+    public void setLaborCost(BigDecimal laborCost) {
+        this.laborCost = laborCost;
+    }
+    
+    public BigDecimal getMaterialCost() {
+        return materialCost;
+    }
+    
+    public void setMaterialCost(BigDecimal materialCost) {
+        this.materialCost = materialCost;
     }
     
     public BigDecimal getTotalAmount() {

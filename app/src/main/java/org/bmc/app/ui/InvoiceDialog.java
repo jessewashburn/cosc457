@@ -32,6 +32,8 @@ public class InvoiceDialog extends JDialog {
     private boolean saved;
     
     private JComboBox<JobItem> jobCombo;
+    private JTextField laborCostField;
+    private JTextField materialCostField;
     private JTextField totalAmountField;
     private JTextField invoiceDateField;
     private JCheckBox paidCheckBox;
@@ -80,9 +82,23 @@ public class InvoiceDialog extends JDialog {
     
     private void initializeComponents() {
         jobCombo = new JComboBox<>();
+        laborCostField = new JTextField(AMOUNT_FIELD_COLS);
+        materialCostField = new JTextField(AMOUNT_FIELD_COLS);
         totalAmountField = new JTextField(AMOUNT_FIELD_COLS);
         invoiceDateField = new JTextField(DATE_FIELD_COLS);
         paidCheckBox = new JCheckBox("Invoice Paid");
+        
+        // Add listeners to auto-calculate total
+        laborCostField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { calculateTotal(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { calculateTotal(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { calculateTotal(); }
+        });
+        materialCostField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { calculateTotal(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { calculateTotal(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { calculateTotal(); }
+        });
     }
     
     private void layoutComponents() {
@@ -100,17 +116,19 @@ public class InvoiceDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
         addFormRow(panel, gbc, 0, "Job:", jobCombo);
-        addFormRow(panel, gbc, 1, "Total Amount:", createAmountPanel());
-        addFormRow(panel, gbc, 2, "Invoice Date:", createDatePanel());
-        addFormRow(panel, gbc, 3, "Payment Status:", paidCheckBox);
+        addFormRow(panel, gbc, 1, "Labor Cost:", createAmountPanel(laborCostField));
+        addFormRow(panel, gbc, 2, "Material Cost:", createAmountPanel(materialCostField));
+        addFormRow(panel, gbc, 3, "Total Amount:", createAmountPanel(totalAmountField));
+        addFormRow(panel, gbc, 4, "Invoice Date:", createDatePanel());
+        addFormRow(panel, gbc, 5, "Payment Status:", paidCheckBox);
         
         return panel;
     }
     
-    private JPanel createAmountPanel() {
+    private JPanel createAmountPanel(JTextField field) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         panel.add(new JLabel("$"));
-        panel.add(totalAmountField);
+        panel.add(field);
         return panel;
     }
     
@@ -168,6 +186,14 @@ public class InvoiceDialog extends JDialog {
             }
         }
         
+        if (invoice.getLaborCost() != null) {
+            laborCostField.setText(invoice.getLaborCost().toString());
+        }
+        
+        if (invoice.getMaterialCost() != null) {
+            materialCostField.setText(invoice.getMaterialCost().toString());
+        }
+        
         if (invoice.getTotalAmount() != null) {
             totalAmountField.setText(invoice.getTotalAmount().toString());
         }
@@ -181,6 +207,19 @@ public class InvoiceDialog extends JDialog {
     
     private void setDefaultValues() {
         invoiceDateField.setText(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+        laborCostField.setText("0.00");
+        materialCostField.setText("0.00");
+    }
+    
+    private void calculateTotal() {
+        try {
+            BigDecimal labor = new BigDecimal(laborCostField.getText().trim().isEmpty() ? "0" : laborCostField.getText().trim());
+            BigDecimal material = new BigDecimal(materialCostField.getText().trim().isEmpty() ? "0" : materialCostField.getText().trim());
+            BigDecimal total = labor.add(material);
+            totalAmountField.setText(total.toString());
+        } catch (NumberFormatException e) {
+            // Ignore invalid input during typing
+        }
     }
     
     private void handleSave() {
@@ -243,6 +282,16 @@ public class InvoiceDialog extends JDialog {
         return LocalDate.parse(invoiceDateField.getText().trim(), DateTimeFormatter.ISO_LOCAL_DATE);
     }
     
+    private BigDecimal parseLaborCost() {
+        String text = laborCostField.getText().trim();
+        return text.isEmpty() ? BigDecimal.ZERO : new BigDecimal(text);
+    }
+    
+    private BigDecimal parseMaterialCost() {
+        String text = materialCostField.getText().trim();
+        return text.isEmpty() ? BigDecimal.ZERO : new BigDecimal(text);
+    }
+    
     private void createNewInvoice(Integer jobId, BigDecimal amount, LocalDate date) throws Exception {
         Invoice newInvoice = new Invoice(
             jobId,
@@ -250,12 +299,16 @@ public class InvoiceDialog extends JDialog {
             amount,
             paidCheckBox.isSelected()
         );
+        newInvoice.setLaborCost(parseLaborCost());
+        newInvoice.setMaterialCost(parseMaterialCost());
         invoiceDAO.create(newInvoice);
     }
     
     private void updateExistingInvoice(Integer jobId, BigDecimal amount, LocalDate date) throws Exception {
         invoice.setJobId(jobId);
         invoice.setInvoiceDate(date);
+        invoice.setLaborCost(parseLaborCost());
+        invoice.setMaterialCost(parseMaterialCost());
         invoice.setTotalAmount(amount);
         invoice.setPaid(paidCheckBox.isSelected());
         invoiceDAO.update(invoice);
