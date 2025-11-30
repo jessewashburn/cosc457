@@ -235,6 +235,22 @@ public class PurchaseOrderDialog extends JDialog {
         JTextField unitPriceField = new JTextField("0.00");
         itemDialog.add(unitPriceField, gbc);
         
+        // Auto-populate unit price when material is selected
+        materialComboBox.addActionListener(e -> {
+            Material selectedMaterial = (Material) materialComboBox.getSelectedItem();
+            if (selectedMaterial != null && selectedMaterial.getUnitCost() != null) {
+                unitPriceField.setText(selectedMaterial.getUnitCost().toString());
+            }
+        });
+        
+        // Trigger initial population if a material is already selected
+        if (materialComboBox.getSelectedItem() != null) {
+            Material initialMaterial = (Material) materialComboBox.getSelectedItem();
+            if (initialMaterial.getUnitCost() != null) {
+                unitPriceField.setText(initialMaterial.getUnitCost().toString());
+            }
+        }
+        
         // Buttons
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
