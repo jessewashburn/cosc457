@@ -207,12 +207,16 @@ public class MainFrame extends JFrame {
     
     private void refreshCurrentPanel() {
         int selectedIndex = tabbedPane.getSelectedIndex();
-        switch (selectedIndex) {
-            case 0 -> customerPanel.refreshData();
-            case 1 -> employeePanel.refreshData();
-            case 2 -> jobPanel.refreshData();
-            case 3 -> invoicePanel.refreshData();
-            case 5 -> purchaseOrderPanel.refreshData();
+        if (selectedIndex == 0) {
+            customerPanel.refreshData();
+        } else if (selectedIndex == 1) {
+            employeePanel.refreshData();
+        } else if (selectedIndex == 2) {
+            jobPanel.refreshData();
+        } else if (selectedIndex == 3) {
+            invoicePanel.refreshData();
+        } else if (selectedIndex == 5) {
+            purchaseOrderPanel.refreshData();
         }
     }
     
@@ -235,16 +239,11 @@ public class MainFrame extends JFrame {
     }
     
     private void showAboutDialog() {
-        String aboutText = """
-            Baltimore Metal Crafters Database Management System
-            Version 1.0.0
-            
-            A comprehensive application for managing restoration projects,
-            customer relationships, employee records, and billing.
-            
-            Built with Java 21 and MySQL
-            """;
-            
+        String aboutText = "Baltimore Metal Crafters Database Management System\n"
+                + "Version 1.0.0\n\n"
+                + "A comprehensive application for managing restoration projects,\n"
+                + "customer relationships, employee records, and billing.\n\n"
+                + "Built with Java 11 and MySQL";
         JOptionPane.showMessageDialog(
             this,
             aboutText,

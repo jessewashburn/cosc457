@@ -310,12 +310,15 @@ public class Job {
      */
     public String getStatusDisplay() {
         if (status == null) return "Unknown";
-        
-        return switch (status) {
-            case PLANNED -> "Planned";
-            case IN_PROGRESS -> "In Progress";
-            case COMPLETED -> "Completed";
-        };
+        if (status == Status.PLANNED) {
+            return "Planned";
+        } else if (status == Status.IN_PROGRESS) {
+            return "In Progress";
+        } else if (status == Status.COMPLETED) {
+            return "Completed";
+        } else {
+            return "Unknown";
+        }
     }
     
     /**
