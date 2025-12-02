@@ -83,6 +83,7 @@ public class MaterialPanel extends JPanel {
         };
         
         materialTable = new JTable(tableModel);
+        materialTable.setAutoCreateRowSorter(true);
         materialTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         materialTable.setAutoCreateRowSorter(true);
         sorter = new TableRowSorter<>(tableModel);

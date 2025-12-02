@@ -102,6 +102,7 @@ public class EmployeePanel extends JPanel {
         };
         
         employeeTable = new JTable(tableModel);
+        employeeTable.setAutoCreateRowSorter(true);
         employeeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         employeeTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {

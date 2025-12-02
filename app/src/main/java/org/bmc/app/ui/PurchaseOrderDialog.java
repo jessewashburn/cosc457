@@ -117,6 +117,7 @@ public class PurchaseOrderDialog extends JDialog {
         };
         
         itemsTable = new JTable(itemsTableModel);
+        itemsTable.setAutoCreateRowSorter(true);
         JScrollPane itemsScrollPane = new JScrollPane(itemsTable);
         itemsScrollPane.setPreferredSize(new Dimension(650, 200));
         itemsPanel.add(itemsScrollPane, BorderLayout.CENTER);

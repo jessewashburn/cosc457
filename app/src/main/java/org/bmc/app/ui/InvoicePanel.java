@@ -107,6 +107,7 @@ public class InvoicePanel extends JPanel {
         };
         
         invoiceTable = new JTable(tableModel);
+        invoiceTable.setAutoCreateRowSorter(true);
         invoiceTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         invoiceTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {

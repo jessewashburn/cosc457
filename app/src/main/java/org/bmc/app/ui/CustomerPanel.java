@@ -94,6 +94,7 @@ public class CustomerPanel extends JPanel {
         };
         
         customerTable = new JTable(tableModel);
+        customerTable.setAutoCreateRowSorter(true);
         customerTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         customerTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {

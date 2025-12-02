@@ -118,6 +118,7 @@ public class ReportsPanel extends JPanel {
         };
         
         jobsDueTable = new JTable(jobsDueTableModel);
+        jobsDueTable.setAutoCreateRowSorter(true);
         jobsDueTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jobsDueTable.getTableHeader().setReorderingAllowed(false);
         
@@ -213,6 +214,7 @@ public class ReportsPanel extends JPanel {
         };
         
         topCustomersTable = new JTable(topCustomersTableModel);
+        topCustomersTable.setAutoCreateRowSorter(true);
         topCustomersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         topCustomersTable.getTableHeader().setReorderingAllowed(false);
         
@@ -296,6 +298,7 @@ public class ReportsPanel extends JPanel {
         };
         
         materialShortagesTable = new JTable(materialShortagesTableModel);
+        materialShortagesTable.setAutoCreateRowSorter(true);
         materialShortagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         materialShortagesTable.getTableHeader().setReorderingAllowed(false);
         
@@ -378,6 +381,7 @@ public class ReportsPanel extends JPanel {
         };
         
         employeeLaborTable = new JTable(employeeLaborTableModel);
+        employeeLaborTable.setAutoCreateRowSorter(true);
         employeeLaborTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         employeeLaborTable.getTableHeader().setReorderingAllowed(false);
         
@@ -460,6 +464,7 @@ public class ReportsPanel extends JPanel {
         };
         
         unpaidInvoicesTable = new JTable(unpaidInvoicesTableModel);
+        unpaidInvoicesTable.setAutoCreateRowSorter(true);
         unpaidInvoicesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         unpaidInvoicesTable.getTableHeader().setReorderingAllowed(false);
         
@@ -542,6 +547,7 @@ public class ReportsPanel extends JPanel {
         };
         
         vendorSpendingTable = new JTable(vendorSpendingTableModel);
+        vendorSpendingTable.setAutoCreateRowSorter(true);
         vendorSpendingTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         vendorSpendingTable.getTableHeader().setReorderingAllowed(false);
         
@@ -629,6 +635,7 @@ public class ReportsPanel extends JPanel {
         };
         
         jobCostComparisonTable = new JTable(jobCostComparisonTableModel);
+        jobCostComparisonTable.setAutoCreateRowSorter(true);
         jobCostComparisonTable.setAutoCreateRowSorter(true);
         jobCostComparisonTable.setRowHeight(25);
         
@@ -759,6 +766,7 @@ public class ReportsPanel extends JPanel {
         };
         
         repeatCustomerTable = new JTable(repeatCustomerTableModel);
+        repeatCustomerTable.setAutoCreateRowSorter(true);
         repeatCustomerTable.setAutoCreateRowSorter(true);
         repeatCustomerTable.setRowHeight(25);
         

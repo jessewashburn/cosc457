@@ -85,6 +85,7 @@ public class PurchaseOrderPanel extends JPanel {
         };
         
         purchaseOrderTable = new JTable(tableModel);
+        purchaseOrderTable.setAutoCreateRowSorter(true);
         purchaseOrderTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         purchaseOrderTable.setAutoCreateRowSorter(true);
         sorter = new TableRowSorter<>(tableModel);
@@ -281,6 +282,7 @@ public class PurchaseOrderPanel extends JPanel {
         }
         
         JTable itemsTable = new JTable(itemsModel);
+        itemsTable.setAutoCreateRowSorter(true);
         JScrollPane scrollPane = new JScrollPane(itemsTable);
         scrollPane.setPreferredSize(new Dimension(500, 300));
         itemsDialog.add(scrollPane, BorderLayout.CENTER);

@@ -114,6 +114,7 @@ public class JobPanel extends JPanel {
         };
         
         jobTable = new JTable(tableModel);
+        jobTable.setAutoCreateRowSorter(true);
         jobTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jobTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -375,6 +376,7 @@ public class JobPanel extends JPanel {
             };
             
             materialsTable = new JTable(materialsTableModel);
+            materialsTable.setAutoCreateRowSorter(true);
             materialsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             materialsTable.getSelectionModel().addListSelectionListener(e -> {
                 if (!e.getValueIsAdjusting()) {
